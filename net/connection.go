@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/barnybug/go-cast/protocol"
-
 	"golang.org/x/net/context"
 
 	"github.com/barnybug/go-cast/api"
@@ -50,7 +48,7 @@ func (c *Connection) Connect(ctx context.Context, host net.IP, port int) error {
 }
 
 func (c *Connection) ReceiveLoop() {
-	receiver := protocol.Service{
+	receiver := api.Serializer{
 		Conn: c.conn,
 	}
 	for {
@@ -69,7 +67,7 @@ func (c *Connection) ReceiveLoop() {
 }
 
 func (c *Connection) Send(payload interface{}, sourceId, destinationId, namespace string) error {
-	sender := protocol.Service{
+	sender := api.Serializer{
 		Conn: c.conn,
 	}
 	return sender.Send(payload, sourceId, destinationId, namespace)

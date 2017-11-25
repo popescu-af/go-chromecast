@@ -1,4 +1,4 @@
-package protocol
+package api
 
 import (
 	"encoding/binary"
@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/barnybug/go-cast/api"
 	"github.com/barnybug/go-cast/log"
 	"github.com/gogo/protobuf/proto"
 )
@@ -20,15 +19,15 @@ type Header struct {
 	RequestId *int   `json:"requestId,omitempty"`
 }
 type Body struct {
-	api.CastMessage
+	CastMessage
 }
 
-type Service struct {
+type Serializer struct {
 	Conn io.ReadWriteCloser
 }
 
 // Receive receives a message
-func (s Service) Receive() (*Message, error) {
+func (s Serializer) Receive() (*Message, error) {
 	var length uint32
 	err := binary.Read(s.Conn, binary.BigEndian, &length)
 	if err != nil {
@@ -61,18 +60,18 @@ func (s Service) Receive() (*Message, error) {
 }
 
 // Send sends a payload
-func (s Service) Send(payload interface{}, sourceId, destinationId, namespace string) error {
+func (s Serializer) Send(payload interface{}, sourceId, destinationId, namespace string) error {
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("failed to marshal payload: %s", err)
 	}
 	payloadString := string(payloadJSON)
-	message := &api.CastMessage{
-		ProtocolVersion: api.CastMessage_CASTV2_1_0.Enum(),
+	message := &CastMessage{
+		ProtocolVersion: CastMessage_CASTV2_1_0.Enum(),
 		SourceId:        &sourceId,
 		DestinationId:   &destinationId,
 		Namespace:       &namespace,
-		PayloadType:     api.CastMessage_STRING.Enum(),
+		PayloadType:     CastMessage_STRING.Enum(),
 		PayloadUtf8:     &payloadString,
 	}
 
@@ -99,6 +98,6 @@ func (s Service) Send(payload interface{}, sourceId, destinationId, namespace st
 }
 
 // Close closes the underlying ReadWriteCloser
-func (s Service) Close() error {
+func (s Serializer) Close() error {
 	return s.Conn.Close()
 }
