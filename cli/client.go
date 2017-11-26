@@ -6,12 +6,12 @@ import (
 	"github.com/oliverpool/go-chromecast/client"
 	"github.com/oliverpool/go-chromecast/command"
 	"github.com/oliverpool/go-chromecast/gogoprotobuf"
-	"github.com/oliverpool/go-chromecast/protocol"
+	"github.com/oliverpool/go-chromecast/net"
 )
 
 // NewClient will send a Connect command
 func NewClient(ctx context.Context, addr string) (*client.Client, error) {
-	conn, err := protocol.Dial(ctx, addr)
+	conn, err := net.Dial(ctx, addr)
 	if err != nil {
 		return nil, err
 	}
