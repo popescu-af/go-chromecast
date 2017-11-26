@@ -1,4 +1,4 @@
-package protocol
+package gogoprotobuf
 
 import (
 	"encoding/binary"
@@ -6,10 +6,10 @@ import (
 	"io"
 	"sync"
 
-	cast "github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/api"
-	"github.com/oliverpool/go-chromecast/log"
 	"github.com/gogo/protobuf/proto"
+	cast "github.com/oliverpool/go-chromecast"
+	"github.com/oliverpool/go-chromecast/gogoprotobuf/pb"
+	"github.com/oliverpool/go-chromecast/log"
 )
 
 type Serializer struct {
@@ -41,7 +41,7 @@ func (s *Serializer) Receive() (env cast.Envelope, pay []byte, err error) {
 		return env, pay, fmt.Errorf("failed to read full packet: %s", err)
 	}
 
-	cmessage := &api.CastMessage{}
+	cmessage := &pb.CastMessage{}
 	err = proto.Unmarshal(packet, cmessage)
 	if err != nil {
 		return env, pay, fmt.Errorf("failed to unmarshal packet: %s", err)
@@ -62,12 +62,12 @@ func (s *Serializer) Receive() (env cast.Envelope, pay []byte, err error) {
 // Send sends a payload
 func (s *Serializer) Send(env cast.Envelope, pay []byte) error {
 	payloadString := string(pay)
-	message := &api.CastMessage{
-		ProtocolVersion: api.CastMessage_CASTV2_1_0.Enum(),
+	message := &pb.CastMessage{
+		ProtocolVersion: pb.CastMessage_CASTV2_1_0.Enum(),
 		SourceId:        &env.Source,
 		DestinationId:   &env.Destination,
 		Namespace:       &env.Namespace,
-		PayloadType:     api.CastMessage_STRING.Enum(),
+		PayloadType:     pb.CastMessage_STRING.Enum(),
 		PayloadUtf8:     &payloadString,
 	}
 
