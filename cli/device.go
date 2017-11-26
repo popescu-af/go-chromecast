@@ -4,23 +4,23 @@ import (
 	"net"
 	"time"
 
-	cast "github.com/oliverpool/go-chromecast"
+	"context"
+
+	chromecast "github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/discover"
 	"github.com/oliverpool/go-chromecast/mdns"
-	"context"
 )
 
-// GetDevice will try to get a casting device.
 // If host is set, it will be used (with its port).
 // Otherwise, if name is set, a chromecast will be looked-up by name.
 // Otherwise the first chromecast found will be returned.
-func GetDevice(ctx context.Context, host string, port int, name string) (*cast.Device, error) {
+func GetDevice(ctx context.Context, host string, port int, name string) (*chromecast.Device, error) {
 	if host != "" {
 		ips, err := net.LookupIP(host)
 		if err != nil {
 			return nil, err
 		}
-		return &cast.Device{
+		return &chromecast.Device{
 			IP:         ips[0],
 			Port:       port,
 			Properties: make(map[string]string),

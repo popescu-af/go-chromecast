@@ -10,7 +10,6 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/oliverpool/go-chromecast"
 	clicast "github.com/oliverpool/go-chromecast/cli"
-	"github.com/oliverpool/go-chromecast/client"
 	"github.com/oliverpool/go-chromecast/command"
 	"github.com/oliverpool/go-chromecast/log"
 )
@@ -53,7 +52,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "cast"
 	app.Usage = "Command line tool for the Chromecast"
-	app.Version = cast.Version
+	app.Version = chromecast.Version
 	app.Flags = commonFlags
 	app.Commands = []cli.Command{
 		{
@@ -75,7 +74,7 @@ func main() {
 // If host is set, it will be used (along port).
 // Otherwise, if name is set, a chromecast will be looked-up by name.
 // Otherwise the first chromecast found will be returned.
-func clientFromContext(ctx context.Context, c *cli.Context) *client.Client {
+func clientFromContext(ctx context.Context, c *cli.Context) chromecast.Client {
 	chr, err := clicast.GetDevice(
 		ctx,
 		c.GlobalString("host"),

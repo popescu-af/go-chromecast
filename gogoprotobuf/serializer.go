@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/gogo/protobuf/proto"
-	cast "github.com/oliverpool/go-chromecast"
+	chromecast "github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/gogoprotobuf/pb"
 	"github.com/oliverpool/go-chromecast/log"
 )
@@ -19,7 +19,7 @@ type Serializer struct {
 }
 
 // Receive receives a message
-func (s *Serializer) Receive() (env cast.Envelope, pay []byte, err error) {
+func (s *Serializer) Receive() (env chromecast.Envelope, pay []byte, err error) {
 	s.rMu.Lock()
 	defer s.rMu.Unlock()
 
@@ -47,7 +47,7 @@ func (s *Serializer) Receive() (env cast.Envelope, pay []byte, err error) {
 		return env, pay, fmt.Errorf("failed to unmarshal packet: %s", err)
 	}
 
-	env = cast.Envelope{
+	env = chromecast.Envelope{
 		Source:      *cmessage.SourceId,
 		Destination: *cmessage.DestinationId,
 		Namespace:   *cmessage.Namespace,
@@ -60,7 +60,7 @@ func (s *Serializer) Receive() (env cast.Envelope, pay []byte, err error) {
 }
 
 // Send sends a payload
-func (s *Serializer) Send(env cast.Envelope, pay []byte) error {
+func (s *Serializer) Send(env chromecast.Envelope, pay []byte) error {
 	payloadString := string(pay)
 	message := &pb.CastMessage{
 		ProtocolVersion: pb.CastMessage_CASTV2_1_0.Enum(),

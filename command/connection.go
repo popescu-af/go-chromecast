@@ -4,18 +4,18 @@ import (
 	"github.com/oliverpool/go-chromecast"
 )
 
-var connectionEnv = cast.Envelope{
+var connectionEnv = chromecast.Envelope{
 	Source:      "sender-0",
 	Destination: "receiver-0",
-	Namespace:   "urn:x-cast:com.google.cast.tp.connection",
+	Namespace:   "urn:x-cast:com.google.chromecast.tp.connection",
 }
 
 var Connect = command{
 	Envelope: connectionEnv,
-	Payload:  cast.PayloadWithID{Type: "CONNECT"},
+	Payload:  chromecast.PayloadWithID{Type: "CONNECT"},
 }
 
 var Close = command{
 	Envelope: connectionEnv,
-	Payload:  cast.PayloadWithID{Type: "CLOSE"},
+	Payload:  chromecast.PayloadWithID{Type: "CLOSE"},
 }

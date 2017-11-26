@@ -13,8 +13,8 @@ import (
 
 func TestFirstDirect(t *testing.T) {
 	scan := mock.Scanner{
-		ScanFunc: func(ctx context.Context, results chan<- *cast.Device) error {
-			results <- &cast.Device{}
+		ScanFunc: func(ctx context.Context, results chan<- *chromecast.Device) error {
+			results <- &chromecast.Device{}
 			close(results)
 			return nil
 		},
@@ -38,7 +38,7 @@ func TestFirstDirect(t *testing.T) {
 
 func TestFirstCancelled(t *testing.T) {
 	scan := mock.Scanner{
-		ScanFunc: func(ctx context.Context, results chan<- *cast.Device) error {
+		ScanFunc: func(ctx context.Context, results chan<- *chromecast.Device) error {
 			<-ctx.Done()
 			return nil
 		},
@@ -65,18 +65,18 @@ func TestFirstCancelled(t *testing.T) {
 func TestNamedDirect(t *testing.T) {
 	scan := mock.Scanner{}
 	done := make(chan struct{})
-	scan.ScanFunc = func(ctx context.Context, results chan<- *cast.Device) error {
+	scan.ScanFunc = func(ctx context.Context, results chan<- *chromecast.Device) error {
 		defer close(results)
-		results <- &cast.Device{}
-		c := &cast.Device{
+		results <- &chromecast.Device{}
+		c := &chromecast.Device{
 			Properties: map[string]string{
 				"fn": "casti",
 			},
 		}
 		results <- c
-		results <- &cast.Device{}
+		results <- &chromecast.Device{}
 		select {
-		case results <- &cast.Device{}:
+		case results <- &chromecast.Device{}:
 			t.Error("channel should have been full")
 		case <-ctx.Done():
 		}
@@ -107,11 +107,11 @@ func TestNamedDirect(t *testing.T) {
 func TestNamedCancelled(t *testing.T) {
 	scan := mock.Scanner{}
 	done := make(chan struct{})
-	scan.ScanFunc = func(ctx context.Context, results chan<- *cast.Device) error {
+	scan.ScanFunc = func(ctx context.Context, results chan<- *chromecast.Device) error {
 		defer close(results)
 		for {
 			select {
-			case results <- &cast.Device{}:
+			case results <- &chromecast.Device{}:
 			case <-ctx.Done():
 				close(done)
 				return nil
@@ -142,12 +142,12 @@ func TestNamedCancelled(t *testing.T) {
 }
 
 func TestUniq(t *testing.T) {
-	in := make(chan *cast.Device, 10)
-	in <- &cast.Device{}
-	in <- &cast.Device{}
-	in <- &cast.Device{}
-	in <- &cast.Device{}
-	c := &cast.Device{
+	in := make(chan *chromecast.Device, 10)
+	in <- &chromecast.Device{}
+	in <- &chromecast.Device{}
+	in <- &chromecast.Device{}
+	in <- &chromecast.Device{}
+	c := &chromecast.Device{
 		Properties: map[string]string{
 			"id": "123",
 		},
@@ -156,7 +156,7 @@ func TestUniq(t *testing.T) {
 	in <- c
 	close(in)
 
-	out := make(chan *cast.Device, 2)
+	out := make(chan *chromecast.Device, 2)
 	discover.Uniq(in, out)
 	c = <-out
 	if c.ID() != "" {

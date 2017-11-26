@@ -1,20 +1,20 @@
 package command
 
-import cast "github.com/oliverpool/go-chromecast"
+import "github.com/oliverpool/go-chromecast"
 
 type command struct {
-	Envelope cast.Envelope
+	Envelope chromecast.Envelope
 	Payload  interface{}
 }
 
 type identifiableCommand struct {
-	Envelope cast.Envelope
-	Payload  cast.IdentifiablePayload
+	Envelope chromecast.Envelope
+	Payload  chromecast.IdentifiablePayload
 }
 
-type requestFunc func(cast.Envelope, cast.IdentifiablePayload) (<-chan []byte, error)
+type requestFunc func(chromecast.Envelope, chromecast.IdentifiablePayload) (<-chan []byte, error)
 
-type sendFunc func(cast.Envelope, interface{}) error
+type sendFunc func(chromecast.Envelope, interface{}) error
 
 func (c command) SendTo(sender sendFunc) error {
 	return sender(c.Envelope, c.Payload)

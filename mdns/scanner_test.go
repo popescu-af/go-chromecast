@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	cast "github.com/oliverpool/go-chromecast"
+	"github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/mdns"
 )
 
-var _ cast.Scanner = mdns.Scanner{}
+var _ chromecast.Scanner = mdns.Scanner{}
 
 func TestDecodeTxtRecord(t *testing.T) {
 	s := mdns.Scanner{}

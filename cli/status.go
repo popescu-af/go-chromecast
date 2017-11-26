@@ -7,7 +7,7 @@ import (
 	"github.com/oliverpool/go-chromecast"
 )
 
-func FprintStatus(out io.Writer, status cast.Status) {
+func FprintStatus(out io.Writer, status chromecast.Status) {
 	if status.Applications != nil {
 		if len(status.Applications) == 0 {
 			fmt.Fprintln(out, "No application running")

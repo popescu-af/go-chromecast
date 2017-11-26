@@ -1,4 +1,4 @@
-package cast
+package chromecast
 
 import (
 	"context"
@@ -32,12 +32,10 @@ func (p *PayloadWithID) SetRequestID(id uint32) {
 	p.RequestID = &id
 }
 
-/*
 type Client interface {
-	Listen(responseType string, ch chan<- Payload)
-	Send(payload interface{}) error
-	Request(payload IdentifiablePayload) (<-chan Payload, error)
+	Listen(env Envelope, responseType string, ch chan<- []byte)
+	Send(env Envelope, payload interface{}) error
+	Request(env Envelope, payload IdentifiablePayload) (<-chan []byte, error)
 	Dispatch() error
 	Close() error
 }
-*/

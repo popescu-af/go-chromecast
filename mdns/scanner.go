@@ -5,13 +5,12 @@ import (
 	"strings"
 	"time"
 
-	cast "github.com/oliverpool/go-chromecast"
 	"github.com/hashicorp/mdns"
+	chromecast "github.com/oliverpool/go-chromecast"
 
 	"context"
 )
 
-// Scanner uses mdns to scan for chromecasts
 type Scanner struct {
 	// The chromecasts have 'Timeout' time to reply to each probe.
 	Timeout time.Duration
@@ -19,7 +18,7 @@ type Scanner struct {
 
 // Scan repeatedly scans the network  and synchronously sends the chromecast found into the results channel.
 // It finishes when the context is done.
-func (s Scanner) Scan(ctx context.Context, results chan<- *cast.Device) error {
+func (s Scanner) Scan(ctx context.Context, results chan<- *chromecast.Device) error {
 	defer close(results)
 
 	// generate entries
@@ -31,7 +30,7 @@ func (s Scanner) Scan(ctx context.Context, results chan<- *cast.Device) error {
 				return
 			}
 			mdns.Query(&mdns.QueryParam{
-				Service: "_googlecast._tcp",
+				Service: "_googlechromecast._tcp",
 				Domain:  "local",
 				Timeout: s.Timeout,
 				Entries: entries,
@@ -55,15 +54,15 @@ func (s Scanner) Scan(ctx context.Context, results chan<- *cast.Device) error {
 	return ctx.Err()
 }
 
-// Decode turns an mdns.ServiceEntry into a cast.Chromecast
-func (s Scanner) Decode(entry *mdns.ServiceEntry) (*cast.Device, error) {
+// Decode turns an mdns.ServiceEntry into a chromecast.Device
+func (s Scanner) Decode(entry *mdns.ServiceEntry) (*chromecast.Device, error) {
 	if !strings.Contains(entry.Name, "._googlecast") {
 		return nil, fmt.Errorf("fdqn '%s does not contain '._googlecast'", entry.Name)
 	}
 
 	info := s.ParseProperties(entry.Info)
 
-	return &cast.Device{
+	return &chromecast.Device{
 		IP:         entry.AddrV4,
 		Port:       entry.Port,
 		Properties: info,

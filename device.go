@@ -1,4 +1,4 @@
-package cast
+package chromecast
 
 import "net"
 import "fmt"

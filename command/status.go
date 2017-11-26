@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	cast "github.com/oliverpool/go-chromecast"
+	"github.com/oliverpool/go-chromecast"
 )
 
 type statusRequest identifiableCommand
 
 type statusResponse struct {
-	Status *cast.Status `json:"status"`
+	Status *chromecast.Status `json:"status"`
 }
 
-func (s statusRequest) Get(requester requestFunc) (st cast.Status, err error) {
+func (s statusRequest) Get(requester requestFunc) (st chromecast.Status, err error) {
 	response, err := requester(s.Envelope, s.Payload)
 	if err != nil {
 		return st, err
@@ -35,13 +35,13 @@ func (s statusRequest) Get(requester requestFunc) (st cast.Status, err error) {
 	return st, err
 }
 
-var statusEnv = cast.Envelope{
+var statusEnv = chromecast.Envelope{
 	Source:      "sender-0",
 	Destination: "receiver-0",
-	Namespace:   "urn:x-cast:com.google.cast.receiver",
+	Namespace:   "urn:x-cast:com.google.chromecast.receiver",
 }
 
 var Status = statusRequest{
 	Envelope: statusEnv,
-	Payload:  &cast.PayloadWithID{Type: "GET_STATUS"},
+	Payload:  &chromecast.PayloadWithID{Type: "GET_STATUS"},
 }

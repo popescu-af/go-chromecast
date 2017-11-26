@@ -11,7 +11,7 @@ import (
 	"github.com/oliverpool/go-chromecast/log"
 )
 
-func New(ctx context.Context, serializer cast.Serializer) *Client {
+func New(ctx context.Context, serializer chromecast.Serializer) *Client {
 	c := Client{
 		Serializer: serializer,
 	}
@@ -30,19 +30,19 @@ func New(ctx context.Context, serializer cast.Serializer) *Client {
 }
 
 type Client struct {
-	cast.Serializer
+	chromecast.Serializer
 
 	requestID uint32
 	mu        sync.Mutex
 	pending   map[uint32]chan<- []byte
-	listeners map[cast.Envelope]map[string][]chan<- []byte
+	listeners map[chromecast.Envelope]map[string][]chan<- []byte
 }
 
-func (c *Client) Listen(env cast.Envelope, responseType string, ch chan<- []byte) {
+func (c *Client) Listen(env chromecast.Envelope, responseType string, ch chan<- []byte) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.listeners == nil {
-		c.listeners = make(map[cast.Envelope]map[string][]chan<- []byte, 1)
+		c.listeners = make(map[chromecast.Envelope]map[string][]chan<- []byte, 1)
 	}
 
 	var ok bool
@@ -56,7 +56,7 @@ func (c *Client) Listen(env cast.Envelope, responseType string, ch chan<- []byte
 	types[responseType] = append(types[responseType], ch)
 }
 
-func (c *Client) Send(env cast.Envelope, payload interface{}) error {
+func (c *Client) Send(env chromecast.Envelope, payload interface{}) error {
 	pay, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("failed to marshal payload: %s", err)
@@ -64,7 +64,7 @@ func (c *Client) Send(env cast.Envelope, payload interface{}) error {
 	return c.Serializer.Send(env, pay)
 }
 
-func (c *Client) Request(env cast.Envelope, payload cast.IdentifiablePayload) (<-chan []byte, error) {
+func (c *Client) Request(env chromecast.Envelope, payload chromecast.IdentifiablePayload) (<-chan []byte, error) {
 	id := atomic.AddUint32(&c.requestID, 1)
 
 	payload.SetRequestID(id)
@@ -92,7 +92,7 @@ func (c *Client) Dispatch() error {
 		return err
 	}
 
-	var payID cast.PayloadWithID
+	var payID chromecast.PayloadWithID
 
 	err = json.Unmarshal(pay, &payID)
 	if err != nil {

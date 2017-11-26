@@ -1,4 +1,4 @@
-[![Build status](https://secure.travis-ci.org/barnybug/go-cast.png?branch=master)](https://secure.travis-ci.org/barnybug/go-cast)
+[![Build status](https://secure.travis-ci.org/barnybug/go-chromecast.png?branch=master)](https://secure.travis-ci.org/barnybug/go-cast)
 
 # go-cast
 

@@ -1,21 +1,21 @@
 package discover
 
 import (
-	cast "github.com/oliverpool/go-chromecast"
+	"github.com/oliverpool/go-chromecast"
 	"context"
 )
 
 // Service allows to discover chromecast via multiple means
 type Service struct {
-	Scanner cast.Scanner
+	Scanner chromecast.Scanner
 }
 
 // First returns the first chromecast that is discovered by the scanner
-func (s Service) First(ctx context.Context) (*cast.Device, error) {
+func (s Service) First(ctx context.Context) (*chromecast.Device, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel() // cancel child-ctx when the first client has been found
 
-	result := make(chan *cast.Device, 1)
+	result := make(chan *chromecast.Device, 1)
 
 	go s.Scanner.Scan(ctx, result)
 	select {
@@ -27,11 +27,11 @@ func (s Service) First(ctx context.Context) (*cast.Device, error) {
 }
 
 // Named returns the first chromecast that is discovered by the scanner with the given name
-func (s Service) Named(ctx context.Context, name string) (*cast.Device, error) {
+func (s Service) Named(ctx context.Context, name string) (*chromecast.Device, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel() // cancel child-ctx when the right client has been found
 
-	result := make(chan *cast.Device, 1)
+	result := make(chan *chromecast.Device, 1)
 
 	go s.Scanner.Scan(ctx, result)
 	for {
@@ -47,7 +47,7 @@ func (s Service) Named(ctx context.Context, name string) (*cast.Device, error) {
 }
 
 // Uniq forward all client deduplicated
-func Uniq(in <-chan *cast.Device, out chan<- *cast.Device) {
+func Uniq(in <-chan *chromecast.Device, out chan<- *chromecast.Device) {
 	seen := make(map[string]struct{})
 	for c := range in {
 		if c == nil {
