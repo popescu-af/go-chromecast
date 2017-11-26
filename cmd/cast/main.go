@@ -12,6 +12,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/barnybug/go-cast"
+	"github.com/barnybug/go-cast/client"
 	"github.com/barnybug/go-cast/command"
 	"github.com/barnybug/go-cast/controllers"
 	"github.com/barnybug/go-cast/discover"
@@ -212,7 +213,7 @@ func scriptCommand(c *cli.Context) {
 	}
 }
 
-func NewClient(ctx context.Context, c *cli.Context) *protocol.Client {
+func NewClient(ctx context.Context, c *cli.Context) *client.Client {
 	chr, err := getChromecast(
 		ctx,
 		c.GlobalString("host"),
@@ -225,7 +226,7 @@ func NewClient(ctx context.Context, c *cli.Context) *protocol.Client {
 	conn, err := protocol.Dial(ctx, chr.Addr())
 	checkErr(err)
 
-	client := protocol.Client{
+	client := client.Client{
 		Serializer: &protocol.Serializer{
 			Conn: conn,
 		},
