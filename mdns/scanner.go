@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	cast "github.com/barnybug/go-cast"
+	cast "github.com/oliverpool/go-chromecast"
 	"github.com/hashicorp/mdns"
 
 	"golang.org/x/net/context"

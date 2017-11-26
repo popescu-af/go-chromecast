@@ -1,6 +1,6 @@
 package command
 
-import cast "github.com/barnybug/go-cast"
+import cast "github.com/oliverpool/go-chromecast"
 
 type command struct {
 	Envelope cast.Envelope

@@ -5,8 +5,8 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/barnybug/go-cast/api"
-	"github.com/barnybug/go-cast/log"
+	"github.com/oliverpool/go-chromecast/api"
+	"github.com/oliverpool/go-chromecast/log"
 )
 
 type Channel struct {
@@ -14,7 +14,7 @@ type Channel struct {
 	sourceId      string
 	DestinationId string
 	namespace     string
-	_ int32 
+	_ int32
 	requestId     int64
 	inFlight      map[int]chan *api.CastMessage
 	listeners     []channelListener

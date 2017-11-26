@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	cast "github.com/barnybug/go-cast"
-	"github.com/barnybug/go-cast/mdns"
+	cast "github.com/oliverpool/go-chromecast"
+	"github.com/oliverpool/go-chromecast/mdns"
 )
 
 var _ cast.Scanner = mdns.Scanner{}
@@ -26,7 +26,7 @@ func TestDecodeTxtRecord(t *testing.T) {
 		"rs": "",
 	}
 
-	res := s.ParseTxtRecord(txt)
+	res := s.ParseProperties(txt)
 	if !mapEqual(exp, res) {
 		t.Errorf("expected %s; found %s", exp, res)
 	}

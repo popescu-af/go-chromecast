@@ -3,12 +3,12 @@ package discover_test
 import (
 	"testing"
 
-	"github.com/barnybug/go-cast/discover"
+	"github.com/oliverpool/go-chromecast/discover"
 
-	"github.com/barnybug/go-cast"
+	"github.com/oliverpool/go-chromecast"
 	"golang.org/x/net/context"
 
-	"github.com/barnybug/go-cast/mock"
+	"github.com/oliverpool/go-chromecast/mock"
 )
 
 func TestFirstDirect(t *testing.T) {

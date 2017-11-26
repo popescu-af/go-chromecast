@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"github.com/barnybug/go-cast/events"
-	"github.com/barnybug/go-cast/net"
+	"github.com/oliverpool/go-chromecast/events"
+	"github.com/oliverpool/go-chromecast/net"
 	"golang.org/x/net/context"
 )
 

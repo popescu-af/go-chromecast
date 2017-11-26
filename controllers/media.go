@@ -8,10 +8,10 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/barnybug/go-cast/api"
-	"github.com/barnybug/go-cast/events"
-	"github.com/barnybug/go-cast/log"
-	"github.com/barnybug/go-cast/net"
+	"github.com/oliverpool/go-chromecast/api"
+	"github.com/oliverpool/go-chromecast/events"
+	"github.com/oliverpool/go-chromecast/log"
+	"github.com/oliverpool/go-chromecast/net"
 )
 
 type MediaController struct {

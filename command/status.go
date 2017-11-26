@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	cast "github.com/barnybug/go-cast"
+	cast "github.com/oliverpool/go-chromecast"
 )
 
 type statusRequest identifiableCommand

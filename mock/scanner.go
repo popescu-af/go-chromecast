@@ -1,7 +1,7 @@
 package mock
 
 import (
-	cast "github.com/barnybug/go-cast"
+	cast "github.com/oliverpool/go-chromecast"
 	"golang.org/x/net/context"
 )
 

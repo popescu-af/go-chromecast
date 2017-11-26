@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/barnybug/go-cast"
+	"github.com/oliverpool/go-chromecast"
 )
 
 var connectionEnv = cast.Envelope{

@@ -3,9 +3,9 @@ package cli
 import (
 	"time"
 
-	cast "github.com/barnybug/go-cast"
-	"github.com/barnybug/go-cast/discover"
-	"github.com/barnybug/go-cast/mdns"
+	cast "github.com/oliverpool/go-chromecast"
+	"github.com/oliverpool/go-chromecast/discover"
+	"github.com/oliverpool/go-chromecast/mdns"
 	"golang.org/x/net/context"
 )
 

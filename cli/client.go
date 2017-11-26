@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"github.com/barnybug/go-cast/client"
-	"github.com/barnybug/go-cast/command"
-	"github.com/barnybug/go-cast/protocol"
+	"github.com/oliverpool/go-chromecast/client"
+	"github.com/oliverpool/go-chromecast/command"
+	"github.com/oliverpool/go-chromecast/protocol"
 	"golang.org/x/net/context"
 )
 

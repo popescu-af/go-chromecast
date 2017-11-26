@@ -10,13 +10,13 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/barnybug/go-cast"
-	clicast "github.com/barnybug/go-cast/cli"
-	"github.com/barnybug/go-cast/client"
-	"github.com/barnybug/go-cast/command"
-	"github.com/barnybug/go-cast/controllers"
-	"github.com/barnybug/go-cast/events"
-	"github.com/barnybug/go-cast/log"
+	"github.com/oliverpool/go-chromecast"
+	clicast "github.com/oliverpool/go-chromecast/cli"
+	"github.com/oliverpool/go-chromecast/client"
+	"github.com/oliverpool/go-chromecast/command"
+	"github.com/oliverpool/go-chromecast/controllers"
+	"github.com/oliverpool/go-chromecast/events"
+	"github.com/oliverpool/go-chromecast/log"
 	"github.com/codegangsta/cli"
 )
 

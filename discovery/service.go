@@ -9,8 +9,8 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/barnybug/go-cast"
-	"github.com/barnybug/go-cast/log"
+	"github.com/oliverpool/go-chromecast"
+	"github.com/oliverpool/go-chromecast/log"
 	"github.com/hashicorp/mdns"
 )
 

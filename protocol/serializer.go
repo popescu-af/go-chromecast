@@ -6,9 +6,9 @@ import (
 	"io"
 	"sync"
 
-	cast "github.com/barnybug/go-cast"
-	"github.com/barnybug/go-cast/api"
-	"github.com/barnybug/go-cast/log"
+	cast "github.com/oliverpool/go-chromecast"
+	"github.com/oliverpool/go-chromecast/api"
+	"github.com/oliverpool/go-chromecast/log"
 	"github.com/gogo/protobuf/proto"
 )
 

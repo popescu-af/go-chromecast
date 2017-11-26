@@ -7,10 +7,10 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/barnybug/go-cast/controllers"
-	"github.com/barnybug/go-cast/events"
-	"github.com/barnybug/go-cast/log"
-	castnet "github.com/barnybug/go-cast/net"
+	"github.com/oliverpool/go-chromecast/controllers"
+	"github.com/oliverpool/go-chromecast/events"
+	"github.com/oliverpool/go-chromecast/log"
+	castnet "github.com/oliverpool/go-chromecast/net"
 )
 
 type Client struct {

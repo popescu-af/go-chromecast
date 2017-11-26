@@ -7,8 +7,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/barnybug/go-cast"
-	"github.com/barnybug/go-cast/log"
+	"github.com/oliverpool/go-chromecast"
+	"github.com/oliverpool/go-chromecast/log"
 )
 
 func New(ctx context.Context, serializer cast.Serializer) *Client {

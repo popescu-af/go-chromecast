@@ -10,8 +10,8 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/barnybug/go-cast/api"
-	"github.com/barnybug/go-cast/log"
+	"github.com/oliverpool/go-chromecast/api"
+	"github.com/oliverpool/go-chromecast/log"
 	"github.com/gogo/protobuf/proto"
 )
 

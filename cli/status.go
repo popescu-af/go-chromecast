@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/barnybug/go-cast"
+	"github.com/oliverpool/go-chromecast"
 )
 
 func FprintStatus(out io.Writer, status cast.Status) {
