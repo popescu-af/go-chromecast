@@ -183,7 +183,7 @@ func scriptCommand(c *cli.Context) {
 	}
 }
 
-func NewClient(ctx context.Context, c *cli.Context) *client.Client {
+func clientFromContext(ctx context.Context, c *cli.Context) *client.Client {
 	chr, err := clicast.GetDevice(
 		ctx,
 		c.GlobalString("host"),
@@ -203,7 +203,7 @@ func statusCommand(c *cli.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.GlobalDuration("timeout"))
 	defer cancel()
 
-	client := NewClient(ctx, c)
+	client := clientFromContext(ctx, c)
 
 	// Get status
 	fmt.Println("Status:")
