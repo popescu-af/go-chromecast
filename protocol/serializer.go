@@ -87,6 +87,7 @@ func (s Serializer) Send(payload interface{}, sourceId, destinationId, namespace
 	} else if l != len(data) {
 		return fmt.Errorf("data written partially")
 	}
+	fmt.Println("Message sent")
 	return nil
 }
 

@@ -17,6 +17,7 @@ import (
 	"github.com/barnybug/go-cast/events"
 	"github.com/barnybug/go-cast/log"
 	"github.com/barnybug/go-cast/mdns"
+	"github.com/barnybug/go-cast/protocol"
 	"github.com/codegangsta/cli"
 )
 
@@ -198,7 +199,58 @@ func scriptCommand(c *cli.Context) {
 	}
 }
 
+func NewClient(ctx context.Context, c *cli.Context) *protocol.Client {
+	client, err := getClient(
+		ctx,
+		c.GlobalString("host"),
+		c.GlobalInt("port"),
+		c.GlobalString("name"),
+	)
+	checkErr(err)
+	fmt.Printf("Found '%s' (%s:%d)...\n", client.Name(), client.IP(), client.Port())
+
+	// to remove in the future
+	err = client.Connect(ctx)
+	checkErr(err)
+
+	conn, err := protocol.Dial(ctx, client.IP(), client.Port())
+	checkErr(err)
+
+	fmt.Println("Connected")
+
+	return &protocol.Client{
+		Serializer: protocol.Serializer{
+			Conn: conn,
+		},
+		SourceID:      cast.DefaultSender,
+		DestinationID: cast.DefaultReceiver,
+		Namespace:     "urn:x-cast:com.google.cast.receiver",
+	}
+}
+
 func statusCommand(c *cli.Context) {
+	log.Debug = c.GlobalBool("debug")
+	ctx, cancel := context.WithTimeout(context.Background(), c.GlobalDuration("timeout"))
+	defer cancel()
+	client := NewClient(ctx, c)
+
+	go func() {
+		for {
+			client.Dispatch()
+		}
+	}()
+
+	fmt.Println("Requesting...")
+	status, err := client.Request(&cast.PayloadWithID{Type: "GET_STATUS"})
+	checkErr(err)
+	fmt.Println("Waiting for reply")
+	payload := <-status
+
+	fmt.Println(string(payload))
+
+}
+
+func statusCommandOld(c *cli.Context) {
 	log.Debug = c.GlobalBool("debug")
 	ctx, cancel := context.WithTimeout(context.Background(), c.GlobalDuration("timeout"))
 	defer cancel()
