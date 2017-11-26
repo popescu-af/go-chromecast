@@ -231,12 +231,9 @@ func NewClient(ctx context.Context, c *cli.Context) *protocol.Client {
 	fmt.Println("Connected")
 
 	return &protocol.Client{
-		Serializer: protocol.Serializer{
+		Serializer: &protocol.Serializer{
 			Conn: conn,
 		},
-		SourceID:      cast.DefaultSender,
-		DestinationID: cast.DefaultReceiver,
-		Namespace:     "urn:x-cast:com.google.cast.receiver",
 	}
 }
 
@@ -253,7 +250,12 @@ func statusCommand(c *cli.Context) {
 	}()
 
 	fmt.Println("Requesting...")
-	status, err := client.Request(&cast.PayloadWithID{Type: "GET_STATUS"})
+	env := cast.Envelope{
+		Source:      cast.DefaultSender,
+		Destination: cast.DefaultReceiver,
+		Namespace:   "urn:x-cast:com.google.cast.receiver",
+	}
+	status, err := client.Request(env, &cast.PayloadWithID{Type: "GET_STATUS"})
 	checkErr(err)
 	fmt.Println("Waiting for reply")
 	payload := <-status

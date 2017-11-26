@@ -2,9 +2,9 @@ package protocol
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io"
+	"sync"
 
 	cast "github.com/barnybug/go-cast"
 	"github.com/barnybug/go-cast/api"
@@ -13,57 +13,57 @@ import (
 )
 
 type Serializer struct {
-	Conn io.ReadWriteCloser
+	Conn io.ReadWriter
+	rMu  sync.Mutex
+	sMu  sync.Mutex
 }
 
 // Receive receives a message
-func (s Serializer) Receive() (*cast.Message, error) {
+func (s *Serializer) Receive() (env cast.Envelope, pay []byte, err error) {
+	s.rMu.Lock()
+	defer s.rMu.Unlock()
+
 	var length uint32
-	err := binary.Read(s.Conn, binary.BigEndian, &length)
+	err = binary.Read(s.Conn, binary.BigEndian, &length)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read packet length: %s", err)
+		return env, pay, fmt.Errorf("failed to read packet length: %s", err)
 	}
 	if length == 0 {
-		return nil, fmt.Errorf("empty packet")
+		return env, pay, fmt.Errorf("empty packet")
 	}
 
 	packet := make([]byte, length)
 	_, err = io.ReadFull(s.Conn, packet)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read full packet: %s", err)
+		return env, pay, fmt.Errorf("failed to read full packet: %s", err)
 	}
 
 	cmessage := &api.CastMessage{}
 	err = proto.Unmarshal(packet, cmessage)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal packet: %s", err)
+		return env, pay, fmt.Errorf("failed to unmarshal packet: %s", err)
+	}
+
+	env = cast.Envelope{
+		Source:      *cmessage.SourceId,
+		Destination: *cmessage.DestinationId,
+		Namespace:   *cmessage.Namespace,
 	}
 
 	log.Printf("%s ⇐ %s [%s]: %+v",
-		*cmessage.DestinationId, *cmessage.SourceId, *cmessage.Namespace, *cmessage.PayloadUtf8)
+		env.Destination, env.Source, env.Namespace, *cmessage.PayloadUtf8)
 
-	message := cast.Message{}
-	message.Payload = []byte(*cmessage.PayloadUtf8)
-
-	err = json.Unmarshal(message.Payload, &message.Header)
-	if err != nil {
-		err = fmt.Errorf("failed to unmarshal header: %s", err)
-	}
-	return &message, err
+	return env, []byte(*cmessage.PayloadUtf8), nil
 }
 
 // Send sends a payload
-func (s Serializer) Send(payload interface{}, sourceId, destinationId, namespace string) error {
-	payloadJSON, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal payload: %s", err)
-	}
-	payloadString := string(payloadJSON)
+func (s *Serializer) Send(env cast.Envelope, pay []byte) error {
+	payloadString := string(pay)
 	message := &api.CastMessage{
 		ProtocolVersion: api.CastMessage_CASTV2_1_0.Enum(),
-		SourceId:        &sourceId,
-		DestinationId:   &destinationId,
-		Namespace:       &namespace,
+		SourceId:        &env.Source,
+		DestinationId:   &env.Destination,
+		Namespace:       &env.Namespace,
 		PayloadType:     api.CastMessage_STRING.Enum(),
 		PayloadUtf8:     &payloadString,
 	}
@@ -75,23 +75,19 @@ func (s Serializer) Send(payload interface{}, sourceId, destinationId, namespace
 		return fmt.Errorf("failed to marshal message: %s", err)
 	}
 
-	log.Printf("%s ⇒ %s [%s]: %s", *message.SourceId, *message.DestinationId, *message.Namespace, *message.PayloadUtf8)
+	log.Printf("%s ⇒ %s [%s]: %s", env.Destination, env.Source, env.Namespace, *message.PayloadUtf8)
+
+	s.sMu.Lock()
+	defer s.sMu.Unlock()
 
 	err = binary.Write(s.Conn, binary.BigEndian, uint32(len(data)))
 	if err != nil {
 		return fmt.Errorf("failed to write length: %s", err)
 	}
-	l, err := s.Conn.Write(data)
+	_, err = s.Conn.Write(data)
 	if err != nil {
 		return fmt.Errorf("failed to write data: %s", err)
-	} else if l != len(data) {
-		return fmt.Errorf("data written partially")
 	}
-	fmt.Println("Message sent")
-	return nil
-}
 
-// Close closes the underlying ReadWriteCloser
-func (s Serializer) Close() error {
-	return s.Conn.Close()
+	return nil
 }
