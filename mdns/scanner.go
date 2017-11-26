@@ -61,7 +61,7 @@ func (s Scanner) Decode(entry *mdns.ServiceEntry) (*cast.Device, error) {
 		return nil, fmt.Errorf("fdqn '%s does not contain '._googlecast'", entry.Name)
 	}
 
-	info := s.ParseTxtRecord(entry.Info)
+	info := s.ParseProperties(entry.Info)
 
 	return &cast.Device{
 		IP:         entry.AddrV4,
@@ -70,18 +70,16 @@ func (s Scanner) Decode(entry *mdns.ServiceEntry) (*cast.Device, error) {
 	}, nil
 }
 
-// ParseTxtRecord a Txt recort into a string map
+// ParseProperties into a string map
 // Input: key1=value1|key2=value2
-func (Scanner) ParseTxtRecord(txt string) map[string]string {
-	m := make(map[string]string)
-
+func (Scanner) ParseProperties(txt string) map[string]string {
 	s := strings.Split(txt, "|")
+	m := make(map[string]string, len(s))
 	for _, v := range s {
 		s := strings.SplitN(v, "=", 2)
 		if len(s) == 2 {
 			m[s[0]] = s[1]
 		}
 	}
-
 	return m
 }
