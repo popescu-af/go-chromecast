@@ -1,13 +1,33 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
 	"sync/atomic"
 
 	"github.com/barnybug/go-cast"
+	"github.com/barnybug/go-cast/log"
 )
+
+func New(ctx context.Context, serializer cast.Serializer) *Client {
+	c := Client{
+		Serializer: serializer,
+	}
+
+	go func() {
+		log.Println("dispatching...")
+		for ctx.Err() == nil {
+			err := c.Dispatch()
+			if err != nil {
+				log.Println("dispatch failed:", err)
+			}
+		}
+	}()
+
+	return &c
+}
 
 type Client struct {
 	cast.Serializer

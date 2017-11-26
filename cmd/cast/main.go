@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -12,14 +11,12 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/barnybug/go-cast"
+	clicast "github.com/barnybug/go-cast/cli"
 	"github.com/barnybug/go-cast/client"
 	"github.com/barnybug/go-cast/command"
 	"github.com/barnybug/go-cast/controllers"
-	"github.com/barnybug/go-cast/discover"
 	"github.com/barnybug/go-cast/events"
 	"github.com/barnybug/go-cast/log"
-	"github.com/barnybug/go-cast/mdns"
-	"github.com/barnybug/go-cast/protocol"
 	"github.com/codegangsta/cli"
 )
 
@@ -137,38 +134,11 @@ func cliCommand(c *cli.Context) {
 // Otherwise, if name is set, a chromecast will be looked-up by name.
 // Otherwise the first chromecast found will be returned.
 func getClient(ctx context.Context, host string, port int, name string) (*cast.Client, error) {
-	chr, err := getChromecast(ctx, host, port, name)
+	chr, err := clicast.GetDevice(ctx, host, port, name)
 	if err != nil {
 		return nil, err
 	}
 	return cast.NewClient(chr.IP, chr.Port), nil
-}
-
-func getChromecast(ctx context.Context, host string, port int, name string) (*cast.Device, error) {
-	if host != "" {
-		log.Printf("Looking up by host: %s", host)
-		ips, err := net.LookupIP(host)
-		if err != nil {
-			return nil, err
-		}
-		return &cast.Device{
-			IP:         ips[0],
-			Port:       port,
-			Properties: make(map[string]string),
-		}, nil
-	}
-
-	find := discover.Service{
-		Scanner: mdns.Scanner{
-			Timeout: 3 * time.Second,
-		},
-	}
-	if name != "" {
-		log.Printf("Looking up by name: %s", name)
-		return find.Named(ctx, name)
-	}
-	log.Printf("Looking up first chromecast")
-	return find.First(ctx)
 }
 
 func connect(ctx context.Context, c *cli.Context) *cast.Client {
@@ -214,7 +184,7 @@ func scriptCommand(c *cli.Context) {
 }
 
 func NewClient(ctx context.Context, c *cli.Context) *client.Client {
-	chr, err := getChromecast(
+	chr, err := clicast.GetDevice(
 		ctx,
 		c.GlobalString("host"),
 		c.GlobalInt("port"),
@@ -223,97 +193,24 @@ func NewClient(ctx context.Context, c *cli.Context) *client.Client {
 	checkErr(err)
 	fmt.Printf("Found '%s' (%s:%d)...\n", chr.Name(), chr.IP, chr.Port)
 
-	conn, err := protocol.Dial(ctx, chr.Addr())
+	client, err := clicast.NewClient(ctx, chr.Addr())
 	checkErr(err)
-
-	client := client.Client{
-		Serializer: &protocol.Serializer{
-			Conn: conn,
-		},
-	}
-
-	go func() {
-		for {
-			err := client.Dispatch()
-			if err != nil {
-				log.Println("Dispatch", err)
-			}
-			if ctx.Err() != nil {
-				return
-			}
-		}
-	}()
-
-	go func() {
-		<-ctx.Done()
-		conn.Close()
-	}()
-
-	return &client
+	return client
 }
 
 func statusCommand(c *cli.Context) {
-	if false {
-		fmt.Println("old way")
-		statusCommandOld(c)
-		return
-	}
 	log.Debug = c.GlobalBool("debug")
 	ctx, cancel := context.WithTimeout(context.Background(), c.GlobalDuration("timeout"))
 	defer cancel()
-	client := NewClient(ctx, c)
 
-	// Connect
-	err := command.Connect.SendTo(client.Send)
-	checkErr(err)
+	client := NewClient(ctx, c)
 
 	// Get status
 	fmt.Println("Status:")
 	status, err := command.Status.Get(client.Request)
 	checkErr(err)
 
-	if status.Applications != nil {
-		if len(status.Applications) == 0 {
-			fmt.Println("No application running")
-		} else {
-			fmt.Printf("Running applications: %d\n", len(status.Applications))
-			for _, app := range status.Applications {
-				fmt.Printf(" - [%s] %s\n", *app.DisplayName, *app.StatusText)
-			}
-		}
-	}
-	if status.Volume != nil {
-		fmt.Printf("Volume: %.2f", *status.Volume.Level)
-		if *status.Volume.Muted {
-			fmt.Print(" (muted)\n")
-		} else {
-			fmt.Print("\n")
-		}
-	}
-}
-
-func statusCommandOld(c *cli.Context) {
-	log.Debug = c.GlobalBool("debug")
-	ctx, cancel := context.WithTimeout(context.Background(), c.GlobalDuration("timeout"))
-	defer cancel()
-	client := connect(ctx, c)
-
-	status, err := client.Receiver().GetStatus(ctx)
-	checkErr(err)
-
-	if len(status.Applications) > 0 {
-		for _, app := range status.Applications {
-			fmt.Printf("[%s] %s\n", *app.DisplayName, *app.StatusText)
-		}
-	} else {
-		fmt.Println("No applications running")
-	}
-	fmt.Printf("Volume: %.2f", *status.Volume.Level)
-	if *status.Volume.Muted {
-		fmt.Print("muted\n")
-	} else {
-		fmt.Print("\n")
-	}
+	clicast.FprintStatus(os.Stdout, status)
 }
 
 func discoverCommand(c *cli.Context) {
@@ -322,17 +219,9 @@ func discoverCommand(c *cli.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	all := make(chan *cast.Device, 5)
-	scanner := mdns.Scanner{
-		Timeout: 3 * time.Second,
-	}
-	go scanner.Scan(ctx, all)
-
-	uniq := make(chan *cast.Device, 5)
-	go discover.Uniq(all, uniq)
 
 	fmt.Printf("Running scanner for %s...\n", timeout)
-	for client := range uniq {
+	for client := range clicast.Scan(ctx) {
 		fmt.Printf("Found: %s:%d '%s' (%s: %s) %s\n", client.IP, client.Port, client.Name(), client.Type(), client.ID(), client.Status())
 	}
 	fmt.Println("Done")
