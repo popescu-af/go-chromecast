@@ -13,8 +13,8 @@ import (
 
 func TestFirstDirect(t *testing.T) {
 	scan := mock.Scanner{
-		ScanFunc: func(ctx context.Context, results chan<- *cast.Client) error {
-			results <- &cast.Client{}
+		ScanFunc: func(ctx context.Context, results chan<- *cast.Chromecast) error {
+			results <- &cast.Chromecast{}
 			close(results)
 			return nil
 		},
@@ -38,7 +38,7 @@ func TestFirstDirect(t *testing.T) {
 
 func TestFirstCancelled(t *testing.T) {
 	scan := mock.Scanner{
-		ScanFunc: func(ctx context.Context, results chan<- *cast.Client) error {
+		ScanFunc: func(ctx context.Context, results chan<- *cast.Chromecast) error {
 			<-ctx.Done()
 			return nil
 		},
@@ -65,15 +65,18 @@ func TestFirstCancelled(t *testing.T) {
 func TestNamedDirect(t *testing.T) {
 	scan := mock.Scanner{}
 	done := make(chan struct{})
-	scan.ScanFunc = func(ctx context.Context, results chan<- *cast.Client) error {
+	scan.ScanFunc = func(ctx context.Context, results chan<- *cast.Chromecast) error {
 		defer close(results)
-		results <- &cast.Client{}
-		c := &cast.Client{}
-		c.SetName("casti")
+		results <- &cast.Chromecast{}
+		c := &cast.Chromecast{
+			Info: map[string]string{
+				"fn": "casti",
+			},
+		}
 		results <- c
-		results <- &cast.Client{}
+		results <- &cast.Chromecast{}
 		select {
-		case results <- &cast.Client{}:
+		case results <- &cast.Chromecast{}:
 			t.Error("channel should have been full")
 		case <-ctx.Done():
 		}
@@ -104,11 +107,11 @@ func TestNamedDirect(t *testing.T) {
 func TestNamedCancelled(t *testing.T) {
 	scan := mock.Scanner{}
 	done := make(chan struct{})
-	scan.ScanFunc = func(ctx context.Context, results chan<- *cast.Client) error {
+	scan.ScanFunc = func(ctx context.Context, results chan<- *cast.Chromecast) error {
 		defer close(results)
 		for {
 			select {
-			case results <- &cast.Client{}:
+			case results <- &cast.Chromecast{}:
 			case <-ctx.Done():
 				close(done)
 				return nil
@@ -139,28 +142,29 @@ func TestNamedCancelled(t *testing.T) {
 }
 
 func TestUniq(t *testing.T) {
-	in := make(chan *cast.Client, 10)
-	in <- &cast.Client{}
-	in <- &cast.Client{}
-	in <- &cast.Client{}
-	in <- &cast.Client{}
-	c := &cast.Client{}
-	c.SetInfo(map[string]string{
-		"id": "123",
-	})
+	in := make(chan *cast.Chromecast, 10)
+	in <- &cast.Chromecast{}
+	in <- &cast.Chromecast{}
+	in <- &cast.Chromecast{}
+	in <- &cast.Chromecast{}
+	c := &cast.Chromecast{
+		Info: map[string]string{
+			"id": "123",
+		},
+	}
 	in <- c
 	in <- c
 	close(in)
 
-	out := make(chan *cast.Client, 2)
+	out := make(chan *cast.Chromecast, 2)
 	discover.Uniq(in, out)
 	c = <-out
-	if c.Uuid() != "" {
-		t.Errorf("unexpected Uuid: %s", c.Uuid())
+	if c.ID() != "" {
+		t.Errorf("unexpected ID: %s", c.ID())
 	}
 	c = <-out
-	if c.Uuid() != "123" {
-		t.Errorf("unexpected Uuid: %s", c.Uuid())
+	if c.ID() != "123" {
+		t.Errorf("unexpected ID: %s", c.ID())
 	}
 	c, ok := <-out
 	if ok {

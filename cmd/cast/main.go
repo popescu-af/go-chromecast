@@ -135,13 +135,25 @@ func cliCommand(c *cli.Context) {
 // Otherwise, if name is set, a chromecast will be looked-up by name.
 // Otherwise the first chromecast found will be returned.
 func getClient(ctx context.Context, host string, port int, name string) (*cast.Client, error) {
+	chr, err := getChromecast(ctx, host, port, name)
+	if err != nil {
+		return nil, err
+	}
+	return cast.NewClient(chr.IP, chr.Port), nil
+}
+
+func getChromecast(ctx context.Context, host string, port int, name string) (*cast.Chromecast, error) {
 	if host != "" {
 		log.Printf("Looking up by host: %s", host)
 		ips, err := net.LookupIP(host)
 		if err != nil {
 			return nil, err
 		}
-		return cast.NewClient(ips[0], port), nil
+		return &cast.Chromecast{
+			IP:   ips[0],
+			Port: port,
+			Info: make(map[string]string),
+		}, nil
 	}
 
 	find := discover.Service{
@@ -280,18 +292,18 @@ func discoverCommand(c *cli.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	all := make(chan *cast.Client, 5)
+	all := make(chan *cast.Chromecast, 5)
 	scanner := mdns.Scanner{
 		Timeout: 3 * time.Second,
 	}
 	go scanner.Scan(ctx, all)
 
-	uniq := make(chan *cast.Client, 5)
+	uniq := make(chan *cast.Chromecast, 5)
 	go discover.Uniq(all, uniq)
 
 	fmt.Printf("Running scanner for %s...\n", timeout)
-	for client := range all {
-		fmt.Printf("Found: %s:%d '%s' (%s) %s\n", client.IP(), client.Port(), client.Name(), client.Device(), client.Status())
+	for client := range uniq {
+		fmt.Printf("Found: %s:%d '%s' (%s: %s) %s\n", client.IP, client.Port, client.Name(), client.Device(), client.ID(), client.Status())
 	}
 	fmt.Println("Done")
 }

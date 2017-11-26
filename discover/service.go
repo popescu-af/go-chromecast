@@ -11,11 +11,11 @@ type Service struct {
 }
 
 // First returns the first chromecast that is discovered by the scanner
-func (s Service) First(ctx context.Context) (*cast.Client, error) {
+func (s Service) First(ctx context.Context) (*cast.Chromecast, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel() // cancel child-ctx when the first client has been found
 
-	result := make(chan *cast.Client, 1)
+	result := make(chan *cast.Chromecast, 1)
 
 	go s.Scanner.Scan(ctx, result)
 	select {
@@ -27,11 +27,11 @@ func (s Service) First(ctx context.Context) (*cast.Client, error) {
 }
 
 // Named returns the first chromecast that is discovered by the scanner with the given name
-func (s Service) Named(ctx context.Context, name string) (*cast.Client, error) {
+func (s Service) Named(ctx context.Context, name string) (*cast.Chromecast, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel() // cancel child-ctx when the right client has been found
 
-	result := make(chan *cast.Client, 1)
+	result := make(chan *cast.Chromecast, 1)
 
 	go s.Scanner.Scan(ctx, result)
 	for {
@@ -47,17 +47,17 @@ func (s Service) Named(ctx context.Context, name string) (*cast.Client, error) {
 }
 
 // Uniq forward all client deduplicated
-func Uniq(in <-chan *cast.Client, out chan<- *cast.Client) {
-	uuids := make(map[string]struct{})
+func Uniq(in <-chan *cast.Chromecast, out chan<- *cast.Chromecast) {
+	seen := make(map[string]struct{})
 	for c := range in {
 		if c == nil {
 			continue
 		}
-		if _, ok := uuids[c.Uuid()]; ok {
+		if _, ok := seen[c.ID()]; ok {
 			continue
 		}
 		out <- c
-		uuids[c.Uuid()] = struct{}{}
+		seen[c.ID()] = struct{}{}
 	}
 	close(out)
 }

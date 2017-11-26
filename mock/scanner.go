@@ -7,10 +7,10 @@ import (
 
 type Scanner struct {
 	ScanFuncCalled int
-	ScanFunc       func(ctx context.Context, results chan<- *cast.Client) error
+	ScanFunc       func(ctx context.Context, results chan<- *cast.Chromecast) error
 }
 
-func (s *Scanner) Scan(ctx context.Context, results chan<- *cast.Client) error {
+func (s *Scanner) Scan(ctx context.Context, results chan<- *cast.Chromecast) error {
 	s.ScanFuncCalled++
 	return s.ScanFunc(ctx, results)
 }

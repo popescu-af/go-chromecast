@@ -19,7 +19,7 @@ type Scanner struct {
 
 // Scan repeatedly scans the network  and synchronously sends the chromecast found into the results channel.
 // It finishes when the context is done.
-func (s Scanner) Scan(ctx context.Context, results chan<- *cast.Client) error {
+func (s Scanner) Scan(ctx context.Context, results chan<- *cast.Chromecast) error {
 	defer close(results)
 
 	// generate entries
@@ -55,20 +55,23 @@ func (s Scanner) Scan(ctx context.Context, results chan<- *cast.Client) error {
 	return ctx.Err()
 }
 
-// Decode turns an mdns.ServiceEntry into a cast.Client
-func (s Scanner) Decode(entry *mdns.ServiceEntry) (*cast.Client, error) {
+// Decode turns an mdns.ServiceEntry into a cast.Chromecast
+func (s Scanner) Decode(entry *mdns.ServiceEntry) (*cast.Chromecast, error) {
 	if !strings.Contains(entry.Name, "._googlecast") {
 		return nil, fmt.Errorf("fdqn '%s does not contain '._googlecast'", entry.Name)
 	}
 
-	client := cast.NewClient(entry.AddrV4, entry.Port)
 	info := s.ParseTxtRecord(entry.Info)
-	client.SetName(info["fn"])
-	client.SetInfo(info)
-	return client, nil
+
+	return &cast.Chromecast{
+		IP:   entry.AddrV4,
+		Port: entry.Port,
+		Info: info,
+	}, nil
 }
 
 // ParseTxtRecord a Txt recort into a string map
+// Input: key1=value1|key2=value2
 func (Scanner) ParseTxtRecord(txt string) map[string]string {
 	m := make(map[string]string)
 
