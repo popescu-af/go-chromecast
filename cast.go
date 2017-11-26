@@ -7,7 +7,7 @@ import (
 type Scanner interface {
 	// Scan scans for chromecast and pushes them onto the results channel (eventually multiple times)
 	// It must close the results channel before returning when the ctx is done
-	Scan(ctx context.Context, results chan<- *Chromecast) error
+	Scan(ctx context.Context, results chan<- *Device) error
 }
 
 type Envelope struct {
@@ -17,6 +17,10 @@ type Envelope struct {
 type Serializer interface {
 	Receive() (Envelope, []byte, error)
 	Send(Envelope, []byte) error
+}
+
+type IdentifiablePayload interface {
+	SetRequestID(uint32)
 }
 
 type PayloadWithID struct {

@@ -26,6 +26,9 @@ func (s *Serializer) Receive() (env cast.Envelope, pay []byte, err error) {
 	var length uint32
 	err = binary.Read(s.Conn, binary.BigEndian, &length)
 	if err != nil {
+		if err == io.EOF {
+			panic(err)
+		}
 		return env, pay, fmt.Errorf("failed to read packet length: %s", err)
 	}
 	if length == 0 {
@@ -75,7 +78,7 @@ func (s *Serializer) Send(env cast.Envelope, pay []byte) error {
 		return fmt.Errorf("failed to marshal message: %s", err)
 	}
 
-	log.Printf("%s ⇒ %s [%s]: %s", env.Destination, env.Source, env.Namespace, *message.PayloadUtf8)
+	log.Printf("%s ⇒ %s [%s]: %s", env.Source, env.Destination, env.Namespace, *message.PayloadUtf8)
 
 	s.sMu.Lock()
 	defer s.sMu.Unlock()

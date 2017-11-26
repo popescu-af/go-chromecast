@@ -44,11 +44,7 @@ func (c *Client) Send(env cast.Envelope, payload interface{}) error {
 	return c.Serializer.Send(env, pay)
 }
 
-type IdentifiablePayload interface {
-	SetRequestID(uint32)
-}
-
-func (c *Client) Request(env cast.Envelope, payload IdentifiablePayload) (<-chan []byte, error) {
+func (c *Client) Request(env cast.Envelope, payload cast.IdentifiablePayload) (<-chan []byte, error) {
 	id := atomic.AddUint32(&c.requestID, 1)
 
 	payload.SetRequestID(id)

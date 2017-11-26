@@ -12,6 +12,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/barnybug/go-cast"
+	"github.com/barnybug/go-cast/command"
 	"github.com/barnybug/go-cast/controllers"
 	"github.com/barnybug/go-cast/discover"
 	"github.com/barnybug/go-cast/events"
@@ -142,17 +143,17 @@ func getClient(ctx context.Context, host string, port int, name string) (*cast.C
 	return cast.NewClient(chr.IP, chr.Port), nil
 }
 
-func getChromecast(ctx context.Context, host string, port int, name string) (*cast.Chromecast, error) {
+func getChromecast(ctx context.Context, host string, port int, name string) (*cast.Device, error) {
 	if host != "" {
 		log.Printf("Looking up by host: %s", host)
 		ips, err := net.LookupIP(host)
 		if err != nil {
 			return nil, err
 		}
-		return &cast.Chromecast{
-			IP:   ips[0],
-			Port: port,
-			Info: make(map[string]string),
+		return &cast.Device{
+			IP:         ips[0],
+			Port:       port,
+			Properties: make(map[string]string),
 		}, nil
 	}
 
@@ -165,7 +166,7 @@ func getChromecast(ctx context.Context, host string, port int, name string) (*ca
 		log.Printf("Looking up by name: %s", name)
 		return find.Named(ctx, name)
 	}
-	log.Printf("Looking up first")
+	log.Printf("Looking up first chromecast")
 	return find.First(ctx)
 }
 
@@ -212,56 +213,82 @@ func scriptCommand(c *cli.Context) {
 }
 
 func NewClient(ctx context.Context, c *cli.Context) *protocol.Client {
-	client, err := getClient(
+	chr, err := getChromecast(
 		ctx,
 		c.GlobalString("host"),
 		c.GlobalInt("port"),
 		c.GlobalString("name"),
 	)
 	checkErr(err)
-	fmt.Printf("Found '%s' (%s:%d)...\n", client.Name(), client.IP(), client.Port())
+	fmt.Printf("Found '%s' (%s:%d)...\n", chr.Name(), chr.IP, chr.Port)
 
-	// to remove in the future
-	err = client.Connect(ctx)
+	conn, err := protocol.Dial(ctx, chr.Addr())
 	checkErr(err)
 
-	conn, err := protocol.Dial(ctx, client.IP(), client.Port())
-	checkErr(err)
-
-	fmt.Println("Connected")
-
-	return &protocol.Client{
+	client := protocol.Client{
 		Serializer: &protocol.Serializer{
 			Conn: conn,
 		},
 	}
+
+	go func() {
+		for {
+			err := client.Dispatch()
+			if err != nil {
+				log.Println("Dispatch", err)
+			}
+			if ctx.Err() != nil {
+				return
+			}
+		}
+	}()
+
+	go func() {
+		<-ctx.Done()
+		conn.Close()
+	}()
+
+	return &client
 }
 
 func statusCommand(c *cli.Context) {
+	if false {
+		fmt.Println("old way")
+		statusCommandOld(c)
+		return
+	}
 	log.Debug = c.GlobalBool("debug")
 	ctx, cancel := context.WithTimeout(context.Background(), c.GlobalDuration("timeout"))
 	defer cancel()
 	client := NewClient(ctx, c)
 
-	go func() {
-		for {
-			client.Dispatch()
-		}
-	}()
-
-	fmt.Println("Requesting...")
-	env := cast.Envelope{
-		Source:      cast.DefaultSender,
-		Destination: cast.DefaultReceiver,
-		Namespace:   "urn:x-cast:com.google.cast.receiver",
-	}
-	status, err := client.Request(env, &cast.PayloadWithID{Type: "GET_STATUS"})
+	// Connect
+	err := command.Connect.SendTo(client.Send)
 	checkErr(err)
-	fmt.Println("Waiting for reply")
-	payload := <-status
 
-	fmt.Println(string(payload))
+	// Get status
+	fmt.Println("Status:")
+	status, err := command.Status.Get(client.Request)
+	checkErr(err)
 
+	if status.Applications != nil {
+		if len(status.Applications) == 0 {
+			fmt.Println("No application running")
+		} else {
+			fmt.Printf("Running applications: %d\n", len(status.Applications))
+			for _, app := range status.Applications {
+				fmt.Printf(" - [%s] %s\n", *app.DisplayName, *app.StatusText)
+			}
+		}
+	}
+	if status.Volume != nil {
+		fmt.Printf("Volume: %.2f", *status.Volume.Level)
+		if *status.Volume.Muted {
+			fmt.Print(" (muted)\n")
+		} else {
+			fmt.Print("\n")
+		}
+	}
 }
 
 func statusCommandOld(c *cli.Context) {
@@ -294,18 +321,18 @@ func discoverCommand(c *cli.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	all := make(chan *cast.Chromecast, 5)
+	all := make(chan *cast.Device, 5)
 	scanner := mdns.Scanner{
 		Timeout: 3 * time.Second,
 	}
 	go scanner.Scan(ctx, all)
 
-	uniq := make(chan *cast.Chromecast, 5)
+	uniq := make(chan *cast.Device, 5)
 	go discover.Uniq(all, uniq)
 
 	fmt.Printf("Running scanner for %s...\n", timeout)
 	for client := range uniq {
-		fmt.Printf("Found: %s:%d '%s' (%s: %s) %s\n", client.IP, client.Port, client.Name(), client.Device(), client.ID(), client.Status())
+		fmt.Printf("Found: %s:%d '%s' (%s: %s) %s\n", client.IP, client.Port, client.Name(), client.Type(), client.ID(), client.Status())
 	}
 	fmt.Println("Done")
 }
