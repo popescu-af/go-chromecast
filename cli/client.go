@@ -4,7 +4,7 @@ import (
 	"github.com/oliverpool/go-chromecast/client"
 	"github.com/oliverpool/go-chromecast/command"
 	"github.com/oliverpool/go-chromecast/protocol"
-	"golang.org/x/net/context"
+	"context"
 )
 
 // NewClient will send a Connect command

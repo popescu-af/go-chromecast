@@ -1,6 +1,6 @@
 package controllers
 
-import "golang.org/x/net/context"
+import "context"
 
 type Controller interface {
 	Start(ctx context.Context) error

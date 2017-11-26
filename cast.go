@@ -1,7 +1,7 @@
 package cast
 
 import (
-	"golang.org/x/net/context"
+	"context"
 )
 
 type Scanner interface {

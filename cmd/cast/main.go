@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/net/context"
+	"context"
 
+	"github.com/codegangsta/cli"
 	"github.com/oliverpool/go-chromecast"
 	clicast "github.com/oliverpool/go-chromecast/cli"
 	"github.com/oliverpool/go-chromecast/client"
@@ -17,7 +18,6 @@ import (
 	"github.com/oliverpool/go-chromecast/controllers"
 	"github.com/oliverpool/go-chromecast/events"
 	"github.com/oliverpool/go-chromecast/log"
-	"github.com/codegangsta/cli"
 )
 
 func checkErr(err error) {

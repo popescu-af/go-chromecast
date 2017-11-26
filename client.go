@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net"
 
-	"golang.org/x/net/context"
+	"context"
 
 	"github.com/oliverpool/go-chromecast/controllers"
 	"github.com/oliverpool/go-chromecast/events"

@@ -3,7 +3,7 @@ package controllers
 import (
 	"github.com/oliverpool/go-chromecast/events"
 	"github.com/oliverpool/go-chromecast/net"
-	"golang.org/x/net/context"
+	"context"
 )
 
 type ConnectionController struct {

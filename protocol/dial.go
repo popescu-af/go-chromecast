@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"net"
 
-	"golang.org/x/net/context"
+	"context"
 )
 
 func Dial(ctx context.Context, addr string) (*tls.Conn, error) {

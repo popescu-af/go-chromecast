@@ -6,7 +6,7 @@ import (
 	"github.com/oliverpool/go-chromecast/discover"
 
 	"github.com/oliverpool/go-chromecast"
-	"golang.org/x/net/context"
+	"context"
 
 	"github.com/oliverpool/go-chromecast/mock"
 )

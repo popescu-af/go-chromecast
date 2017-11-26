@@ -8,7 +8,7 @@ import (
 	cast "github.com/oliverpool/go-chromecast"
 	"github.com/hashicorp/mdns"
 
-	"golang.org/x/net/context"
+	"context"
 )
 
 // Scanner uses mdns to scan for chromecasts

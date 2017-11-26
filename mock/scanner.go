@@ -2,7 +2,7 @@ package mock
 
 import (
 	cast "github.com/oliverpool/go-chromecast"
-	"golang.org/x/net/context"
+	"context"
 )
 
 type Scanner struct {

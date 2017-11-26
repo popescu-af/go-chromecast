@@ -2,7 +2,7 @@ package discover
 
 import (
 	cast "github.com/oliverpool/go-chromecast"
-	"golang.org/x/net/context"
+	"context"
 )
 
 // Service allows to discover chromecast via multiple means

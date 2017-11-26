@@ -6,7 +6,7 @@ import (
 	cast "github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/discover"
 	"github.com/oliverpool/go-chromecast/mdns"
-	"golang.org/x/net/context"
+	"context"
 )
 
 func Scan(ctx context.Context) chan *cast.Device {
