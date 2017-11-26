@@ -7,7 +7,7 @@ import (
 var connectionEnv = chromecast.Envelope{
 	Source:      "sender-0",
 	Destination: "receiver-0",
-	Namespace:   "urn:x-cast:com.google.chromecast.tp.connection",
+	Namespace:   "urn:x-cast:com.google.cast.tp.connection",
 }
 
 var Connect = command{

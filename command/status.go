@@ -38,7 +38,7 @@ func (s statusRequest) Get(requester requestFunc) (st chromecast.Status, err err
 var statusEnv = chromecast.Envelope{
 	Source:      "sender-0",
 	Destination: "receiver-0",
-	Namespace:   "urn:x-cast:com.google.chromecast.receiver",
+	Namespace:   "urn:x-cast:com.google.cast.receiver",
 }
 
 var Status = statusRequest{

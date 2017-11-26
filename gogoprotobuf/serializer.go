@@ -26,9 +26,6 @@ func (s *Serializer) Receive() (env chromecast.Envelope, pay []byte, err error) 
 	var length uint32
 	err = binary.Read(s.Conn, binary.BigEndian, &length)
 	if err != nil {
-		if err == io.EOF {
-			panic(err)
-		}
 		return env, pay, fmt.Errorf("failed to read packet length: %s", err)
 	}
 	if length == 0 {

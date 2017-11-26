@@ -30,7 +30,7 @@ func (s Scanner) Scan(ctx context.Context, results chan<- *chromecast.Device) er
 				return
 			}
 			mdns.Query(&mdns.QueryParam{
-				Service: "_googlechromecast._tcp",
+				Service: "_googlecast._tcp",
 				Domain:  "local",
 				Timeout: s.Timeout,
 				Entries: entries,
