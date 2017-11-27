@@ -13,6 +13,7 @@ import (
 	clicast "github.com/oliverpool/go-chromecast/cli"
 	"github.com/oliverpool/go-chromecast/command"
 	"github.com/oliverpool/go-chromecast/command/media"
+	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver"
 	"github.com/oliverpool/go-chromecast/command/volume"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -116,8 +117,8 @@ func statusCommand(c *cli.Context) {
 	// Get App
 	app, err := media.FromStatus(client, status)
 	if err != nil {
-		fmt.Println("Launching new App")
-		app, err = media.New(client)
+		fmt.Println("Launching new " + defaultreceiver.Name)
+		app, err = media.Launch(client, defaultreceiver.ID)
 	} else {
 		fmt.Println("App retrieved")
 	}

@@ -9,8 +9,8 @@ import (
 	"github.com/oliverpool/go-chromecast/command"
 )
 
-// ID chosen from https://gist.github.com/jloutsenhizer/8855258
-const ID = "CC1AD845"
+// https://developers.google.com/cast/docs/reference/messages
+
 const Namespace = "urn:x-cast:com.google.cast.media"
 
 type App struct {
@@ -21,17 +21,12 @@ type App struct {
 	latestStatus []Status
 }
 
-func New(client chromecast.Client) (a *App, err error) {
-	env, err := command.Launch.App(client, ID)
+func Launch(client chromecast.Client, id string) (*App, error) {
+	st, err := command.Launch.App(client, id)
 	if err != nil {
-		return a, err
+		return nil, err
 	}
-	a = &App{
-		Envelope: env,
-		Client:   client,
-	}
-
-	return a, command.Connect.SendTo(client, env.Destination)
+	return FromStatus(client, st)
 }
 
 func FromStatus(client chromecast.Client, st chromecast.Status) (a *App, err error) {

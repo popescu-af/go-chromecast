@@ -12,19 +12,18 @@ type launchRequest struct {
 	Payload  Map
 }
 
-func (l launchRequest) App(requester chromecast.Requester, id string) (env chromecast.Envelope, err error) {
+func (l launchRequest) App(requester chromecast.Requester, id string) (st chromecast.Status, err error) {
 	l.Payload["appId"] = id
 	response, err := requester.Request(l.Envelope, l.Payload)
 	if err != nil {
-		return env, err
+		return st, err
 	}
 
 	payload := <-response
 	if payload == nil {
-		return env, fmt.Errorf("empty status payload")
+		return st, fmt.Errorf("empty status payload")
 	}
 
-	var st chromecast.Status
 	sr := statusResponse{
 		Status: &st,
 	}
@@ -34,24 +33,7 @@ func (l launchRequest) App(requester chromecast.Requester, id string) (env chrom
 		err = fmt.Errorf("failed to unmarshal into status: %s", err)
 	}
 
-	return AppEnvFromStatus(st, id, l.Envelope.Source)
-}
-
-func AppEnvFromStatus(st chromecast.Status, appID, source string) (env chromecast.Envelope, err error) {
-	for _, app := range st.Applications {
-		if app != nil && app.AppID != nil && *app.AppID == appID {
-			if app.TransportId != nil && len(app.Namespaces) > 0 {
-				env = chromecast.Envelope{
-					Source:      source,
-					Destination: *app.TransportId,
-					Namespace:   app.Namespaces[len(app.Namespaces)-1].Name,
-				}
-				return env, nil
-			}
-			return env, fmt.Errorf("transportId or namespaces are empty")
-		}
-	}
-	return env, fmt.Errorf("appId could not be found in status")
+	return st, err
 }
 
 func TransportForNamespace(st chromecast.Status, namespace string) (transport string, err error) {

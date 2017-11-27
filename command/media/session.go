@@ -41,7 +41,7 @@ func (s Session) Play() (<-chan bool, error) {
 }
 
 func (s Session) Stop() (<-chan []byte, error) {
-	return s.do("STOP")
+	return s.do("STOP") // TODO can be checked?
 }
 
 func playerStateIs(sr statusResponse, state string) bool {
