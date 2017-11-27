@@ -14,6 +14,7 @@ import (
 	clicast "github.com/oliverpool/go-chromecast/cli"
 	"github.com/oliverpool/go-chromecast/command"
 	"github.com/oliverpool/go-chromecast/command/media"
+	"github.com/oliverpool/go-chromecast/command/volume"
 )
 
 func checkErr(err error) {
@@ -131,18 +132,19 @@ func statusCommand(c *cli.Context) {
 	})
 	checkErr(err)
 
-	_, err = command.Volume.Set(client, 1)
+	_, err = volume.Set(client, 1)
 	checkErr(err)
 
 	time.Sleep(4 * time.Second)
 	session.Pause()
-	_, err = command.Volume.Mute(client, true)
+	_, err = volume.Mute(client, true)
 	checkErr(err)
 
 	time.Sleep(4 * time.Second)
 	session.Play()
 	time.Sleep(4 * time.Second)
-	session.Stop()
+	ch, err := session.Stop()
+	<-ch
 
 	clicast.FprintStatus(os.Stdout, status)
 }
