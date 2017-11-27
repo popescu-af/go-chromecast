@@ -13,6 +13,7 @@ import (
 	"github.com/oliverpool/go-chromecast"
 	clicast "github.com/oliverpool/go-chromecast/cli"
 	"github.com/oliverpool/go-chromecast/command"
+	"github.com/oliverpool/go-chromecast/command/media"
 )
 
 func checkErr(err error) {
@@ -110,6 +111,13 @@ func statusCommand(c *cli.Context) {
 	fmt.Println("Status:")
 	status, err := command.Status.Get(client)
 	checkErr(err)
+
+	// Launch App
+	fmt.Println("App:")
+	app, err := media.New(client)
+	checkErr(err)
+
+	fmt.Println(app)
 
 	clicast.FprintStatus(os.Stdout, status)
 }

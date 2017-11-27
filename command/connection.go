@@ -10,12 +10,12 @@ var connectionEnv = chromecast.Envelope{
 	Namespace:   "urn:x-cast:com.google.cast.tp.connection",
 }
 
-var Connect = command{
+var Connect = Command{
 	Envelope: connectionEnv,
-	Payload:  chromecast.PayloadWithID{Type: "CONNECT"},
+	Payload:  Map{"type": "CONNECT"},
 }
 
-var Close = command{
+var Close = Command{
 	Envelope: connectionEnv,
-	Payload:  chromecast.PayloadWithID{Type: "CLOSE"},
+	Payload:  Map{"type": "CLOSE"},
 }

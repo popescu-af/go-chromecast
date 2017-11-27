@@ -26,9 +26,9 @@ func NewClient(ctx context.Context, addr string, logger chromecast.Logger) (*cli
 
 	go func() {
 		<-ctx.Done()
-		command.Close.SendTo(c)
+		command.Close.Send(c)
 		conn.Close()
 	}()
 
-	return c, command.Connect.SendTo(c)
+	return c, command.Connect.Send(c)
 }

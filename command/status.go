@@ -43,5 +43,5 @@ var statusEnv = chromecast.Envelope{
 
 var Status = statusRequest{
 	Envelope: statusEnv,
-	Payload:  &chromecast.PayloadWithID{Type: "GET_STATUS"},
+	Payload:  Map{"type": "GET_STATUS"},
 }
