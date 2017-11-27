@@ -8,8 +8,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/oliverpool/go-chromecast/command/heartbeat"
-
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/oliverpool/go-chromecast"
 	clicast "github.com/oliverpool/go-chromecast/cli"
@@ -109,8 +107,6 @@ func statusCommand(c *cli.Context) {
 	defer cancel()
 
 	client := clientFromContext(ctx, c)
-
-	go heartbeat.RespondToPing(client, client)
 
 	// Get status
 	fmt.Println("Status:")

@@ -7,6 +7,7 @@ import (
 
 	"github.com/oliverpool/go-chromecast/client"
 	"github.com/oliverpool/go-chromecast/command"
+	"github.com/oliverpool/go-chromecast/command/heartbeat"
 	"github.com/oliverpool/go-chromecast/gogoprotobuf"
 	"github.com/oliverpool/go-chromecast/net"
 )
@@ -29,6 +30,7 @@ func NewClient(ctx context.Context, addr string, logger chromecast.Logger) (*cli
 		command.Close.Send(c)
 		conn.Close()
 	}()
+	go heartbeat.RespondToPing(c, c)
 
 	return c, command.Connect.Send(c)
 }
