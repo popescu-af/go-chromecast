@@ -23,9 +23,9 @@ func NewClient(ctx context.Context, addr string) (*client.Client, error) {
 
 	go func() {
 		<-ctx.Done()
-		command.Close.SendTo(c.Send)
+		command.Close.SendTo(c)
 		conn.Close()
 	}()
 
-	return c, command.Connect.SendTo(c.Send)
+	return c, command.Connect.SendTo(c)
 }

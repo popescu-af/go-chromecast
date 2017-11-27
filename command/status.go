@@ -13,8 +13,8 @@ type statusResponse struct {
 	Status *chromecast.Status `json:"status"`
 }
 
-func (s statusRequest) Get(requester requestFunc) (st chromecast.Status, err error) {
-	response, err := requester(s.Envelope, s.Payload)
+func (s statusRequest) Get(requester chromecast.Requester) (st chromecast.Status, err error) {
+	response, err := requester.Request(s.Envelope, s.Payload)
 	if err != nil {
 		return st, err
 	}

@@ -98,7 +98,7 @@ func statusCommand(c *cli.Context) {
 
 	// Get status
 	fmt.Println("Status:")
-	status, err := command.Status.Get(client.Request)
+	status, err := command.Status.Get(client)
 	checkErr(err)
 
 	clicast.FprintStatus(os.Stdout, status)

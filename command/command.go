@@ -12,10 +12,6 @@ type identifiableCommand struct {
 	Payload  chromecast.IdentifiablePayload
 }
 
-type requestFunc func(chromecast.Envelope, chromecast.IdentifiablePayload) (<-chan []byte, error)
-
-type sendFunc func(chromecast.Envelope, interface{}) error
-
-func (c command) SendTo(sender sendFunc) error {
-	return sender(c.Envelope, c.Payload)
+func (c command) SendTo(sender chromecast.Sender) error {
+	return sender.Send(c.Envelope, c.Payload)
 }
