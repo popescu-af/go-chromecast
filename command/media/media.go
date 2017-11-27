@@ -153,7 +153,12 @@ func (a *App) GetStatus() ([]Status, error) {
 
 func (a *App) UpdateStatus() {
 	ch := make(chan []byte, 1)
-	a.Client.Listen(a.Envelope, "MEDIA_STATUS", ch)
+	env := chromecast.Envelope{
+		Source:      a.Envelope.Destination,
+		Destination: a.Envelope.Source,
+		Namespace:   a.Envelope.Namespace,
+	}
+	a.Client.Listen(env, "MEDIA_STATUS", ch)
 
 	for payload := range ch {
 		var s statusResponse
