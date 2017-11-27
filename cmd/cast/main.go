@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/oliverpool/go-chromecast/command/heartbeat"
+
 	"github.com/codegangsta/cli"
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/oliverpool/go-chromecast"
@@ -108,6 +110,8 @@ func statusCommand(c *cli.Context) {
 
 	client := clientFromContext(ctx, c)
 
+	go heartbeat.RespondToPing(client, client)
+
 	// Get status
 	fmt.Println("Status:")
 	status, err := command.Status.Get(client)
@@ -122,7 +126,21 @@ func statusCommand(c *cli.Context) {
 		fmt.Println("App retrieved")
 	}
 	checkErr(err)
+	go app.UpdateStatus()
 	fmt.Println(app)
+
+	fmt.Println(app.GetStatus())
+
+	if false {
+		curSession, err := app.CurrentSession()
+		for err != nil {
+			fmt.Println("waiting for valid session")
+			time.Sleep(time.Second)
+			curSession, err = app.CurrentSession()
+		}
+		curSession.Play()
+		return
+	}
 
 	session, err := app.Load(media.Item{
 		// ContentId:   "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
@@ -143,8 +161,8 @@ func statusCommand(c *cli.Context) {
 	time.Sleep(4 * time.Second)
 	session.Play()
 	time.Sleep(4 * time.Second)
-	ch, err := session.Stop()
-	<-ch
+	// ch, err := session.Stop()
+	// <-ch
 
 	clicast.FprintStatus(os.Stdout, status)
 }

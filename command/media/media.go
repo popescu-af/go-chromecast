@@ -3,6 +3,7 @@ package media
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/command"
@@ -14,26 +15,33 @@ const ID = "CC1AD845"
 type App struct {
 	Envelope chromecast.Envelope
 	Client   chromecast.Client
+
+	mu           sync.Mutex
+	latestStatus []Status
 }
 
-func New(client chromecast.Client) (a App, err error) {
+func New(client chromecast.Client) (a *App, err error) {
 	env, err := command.Launch.App(client, ID)
 	if err != nil {
 		return a, err
 	}
-	a.Envelope = env
-	a.Client = client
+	a = &App{
+		Envelope: env,
+		Client:   client,
+	}
 
 	return a, command.Connect.SendTo(client, env.Destination)
 }
 
-func FromStatus(client chromecast.Client, st chromecast.Status) (a App, err error) {
+func FromStatus(client chromecast.Client, st chromecast.Status) (a *App, err error) {
 	env, err := command.AppEnvFromStatus(st, ID, command.Status.Envelope.Source)
 	if err != nil {
 		return a, err
 	}
-	a.Envelope = env
-	a.Client = client
+	a = &App{
+		Envelope: env,
+		Client:   client,
+	}
 
 	return a, command.Connect.SendTo(client, env.Destination)
 }
@@ -69,7 +77,7 @@ type ItemStatus struct {
 }
 
 // FOR DEBUG ONLY!
-func (a App) syncedRequestDEBUG(payload chromecast.IdentifiablePayload) error {
+func (a *App) syncedRequestDEBUG(payload chromecast.IdentifiablePayload) error {
 	response, err := a.Client.Request(a.Envelope, payload)
 	if err != nil {
 		return err
@@ -78,11 +86,35 @@ func (a App) syncedRequestDEBUG(payload chromecast.IdentifiablePayload) error {
 	return nil
 }
 
-func (a App) request(payload chromecast.IdentifiablePayload) (<-chan []byte, error) {
+func (a *App) request(payload chromecast.IdentifiablePayload) (<-chan []byte, error) {
 	return a.Client.Request(a.Envelope, payload)
 }
 
-func (a App) Load(item Item) (*Session, error) {
+func (a *App) setStatus(st []Status) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.latestStatus = st
+}
+
+func (a *App) CurrentSession() (*Session, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.firstSession(a.latestStatus)
+}
+
+func (a *App) firstSession(st []Status) (*Session, error) {
+	for _, status := range st {
+		if status.SessionID > 0 {
+			return &Session{
+				App: a,
+				ID:  status.SessionID,
+			}, nil
+		}
+	}
+	return nil, fmt.Errorf("no valid SessionId has been found in the status")
+}
+
+func (a *App) Load(item Item) (*Session, error) {
 	payload := command.Map{
 		"type":     "LOAD",
 		"media":    item,
@@ -100,20 +132,40 @@ func (a App) Load(item Item) (*Session, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, status := range s.Status {
-		if status.SessionID > 0 {
-			return &Session{
-				App: a,
-				ID:  status.SessionID,
-			}, nil
-		}
-	}
+	a.setStatus(s.Status)
+	return a.firstSession(s.Status)
+}
 
-	return nil, fmt.Errorf("no valid SessionId has been found in the response")
+func (a *App) GetStatus() ([]Status, error) {
+	payload := command.Map{"type": "GET_STATUS"}
+	response, err := a.Client.Request(a.Envelope, payload)
+	if err != nil {
+		return nil, err
+	}
+	body := <-response
+	var s statusResponse
+	err = json.Unmarshal(body, &s)
+	if err == nil {
+		a.setStatus(s.Status)
+	}
+	return s.Status, err
+}
+
+func (a *App) UpdateStatus() {
+	ch := make(chan []byte, 1)
+	a.Client.Listen(a.Envelope, "MEDIA_STATUS", ch)
+
+	for payload := range ch {
+		var s statusResponse
+		if err := json.Unmarshal(payload, &s); err != nil {
+			continue
+		}
+		a.setStatus(s.Status)
+	}
 }
 
 type Session struct {
-	App
+	*App
 	ID int `json:"mediaSessionId"`
 }
 
@@ -122,7 +174,7 @@ func (s Session) do(cmd string) (<-chan []byte, error) {
 		"type":           cmd,
 		"mediaSessionId": s.ID,
 	}
-	return s.request(payload)
+	return s.App.request(payload)
 }
 
 func (s Session) Pause() (<-chan []byte, error) {
@@ -136,8 +188,3 @@ func (s Session) Play() (<-chan []byte, error) {
 func (s Session) Stop() (<-chan []byte, error) {
 	return s.do("STOP")
 }
-
-// var commandMediaPlay = net.PayloadHeaders{Type: "PLAY"}
-// var commandMediaPause = net.PayloadHeaders{Type: "PAUSE"}
-// var commandMediaStop = net.PayloadHeaders{Type: "STOP"}
-// var commandMediaLoad = net.PayloadHeaders{Type: "LOAD"}

@@ -117,9 +117,9 @@ func (c *Client) Dispatch() error {
 
 	if env.Destination == "*" {
 		// broadcast
-		for _, envs := range c.listeners {
-			for _, listeners := range envs {
-				for _, ch := range listeners {
+		for _, listeners := range c.listeners {
+			if typeListeners, ok := listeners[payID.Type]; ok {
+				for _, ch := range typeListeners {
 					// non blocking send
 					select {
 					case ch <- pay:
