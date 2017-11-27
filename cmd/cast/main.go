@@ -107,16 +107,22 @@ func statusCommand(c *cli.Context) {
 
 	client := clientFromContext(ctx, c)
 
+	// Launch App
+	fmt.Println("App:")
+	app, err := media.New(client)
+	checkErr(err)
+	fmt.Println(app)
+
 	// Get status
 	fmt.Println("Status:")
 	status, err := command.Status.Get(client)
 	checkErr(err)
 
-	// Launch App
-	fmt.Println("App:")
-	app, err := media.New(client)
+	time.Sleep(5 * time.Second)
+	// Get App
+	fmt.Println("App (retrieved):")
+	app, err = media.FromStatus(client, status)
 	checkErr(err)
-
 	fmt.Println(app)
 
 	clicast.FprintStatus(os.Stdout, status)

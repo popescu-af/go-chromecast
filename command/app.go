@@ -34,11 +34,15 @@ func (l launchRequest) App(requester chromecast.Requester, id string) (env chrom
 		err = fmt.Errorf("failed to unmarshal into status: %s", err)
 	}
 
+	return AppEnvFromStatus(st, id, l.Envelope.Source)
+}
+
+func AppEnvFromStatus(st chromecast.Status, appID, source string) (env chromecast.Envelope, err error) {
 	for _, app := range st.Applications {
-		if app != nil && app.AppID != nil && *app.AppID == id {
+		if app != nil && app.AppID != nil && *app.AppID == appID {
 			if app.TransportId != nil && len(app.Namespaces) > 0 {
 				env = chromecast.Envelope{
-					Source:      l.Envelope.Source,
+					Source:      source,
 					Destination: *app.TransportId,
 					Namespace:   app.Namespaces[len(app.Namespaces)-1].Name,
 				}

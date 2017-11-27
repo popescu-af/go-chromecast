@@ -23,3 +23,14 @@ func New(client chromecast.Client) (a App, err error) {
 
 	return a, command.Connect.SendTo(client, env.Destination)
 }
+
+func FromStatus(client chromecast.Client, st chromecast.Status) (a App, err error) {
+	env, err := command.AppEnvFromStatus(st, ID, command.Status.Envelope.Source)
+	if err != nil {
+		return a, err
+	}
+	a.Envelope = env
+	a.Client = client
+
+	return a, command.Connect.SendTo(client, env.Destination)
+}
