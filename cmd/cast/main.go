@@ -10,13 +10,13 @@ import (
 
 	"github.com/oliverpool/go-chromecast/command/heartbeat"
 
-	"github.com/codegangsta/cli"
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/oliverpool/go-chromecast"
 	clicast "github.com/oliverpool/go-chromecast/cli"
 	"github.com/oliverpool/go-chromecast/command"
 	"github.com/oliverpool/go-chromecast/command/media"
 	"github.com/oliverpool/go-chromecast/command/volume"
+	"gopkg.in/urfave/cli.v1"
 )
 
 func checkErr(err error) {
