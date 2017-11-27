@@ -11,6 +11,7 @@ import (
 
 // ID chosen from https://gist.github.com/jloutsenhizer/8855258
 const ID = "CC1AD845"
+const Namespace = "urn:x-cast:com.google.cast.media"
 
 type App struct {
 	Envelope chromecast.Envelope
@@ -34,20 +35,24 @@ func New(client chromecast.Client) (a *App, err error) {
 }
 
 func FromStatus(client chromecast.Client, st chromecast.Status) (a *App, err error) {
-	env, err := command.AppEnvFromStatus(st, ID, command.Status.Envelope.Source)
+	transport, err := command.TransportForNamespace(st, Namespace)
 	if err != nil {
 		return a, err
 	}
 	a = &App{
-		Envelope: env,
-		Client:   client,
+		Envelope: chromecast.Envelope{
+			Source:      command.Status.Envelope.Source,
+			Destination: transport,
+			Namespace:   Namespace,
+		},
+		Client: client,
 	}
 
-	return a, command.Connect.SendTo(client, env.Destination)
+	return a, command.Connect.SendTo(client, a.Envelope.Destination)
 }
 
 type Item struct {
-	ContentId   string `json:"contentId"`
+	ContentID   string `json:"contentId"`
 	StreamType  string `json:"streamType"`
 	ContentType string `json:"contentType"`
 }
@@ -143,8 +148,8 @@ func (a *App) GetStatus() ([]Status, error) {
 		return nil, err
 	}
 	body := <-response
-	var s statusResponse
-	err = json.Unmarshal(body, &s)
+
+	s, err := unmarshalStatus(body)
 	if err == nil {
 		a.setStatus(s.Status)
 	}
@@ -161,35 +166,15 @@ func (a *App) UpdateStatus() {
 	a.Client.Listen(env, "MEDIA_STATUS", ch)
 
 	for payload := range ch {
-		var s statusResponse
-		if err := json.Unmarshal(payload, &s); err != nil {
+		s, err := unmarshalStatus(payload)
+		if err != nil {
 			continue
 		}
 		a.setStatus(s.Status)
 	}
 }
 
-type Session struct {
-	*App
-	ID int `json:"mediaSessionId"`
-}
-
-func (s Session) do(cmd string) (<-chan []byte, error) {
-	payload := command.Map{
-		"type":           cmd,
-		"mediaSessionId": s.ID,
-	}
-	return s.App.request(payload)
-}
-
-func (s Session) Pause() (<-chan []byte, error) {
-	return s.do("PAUSE")
-}
-
-func (s Session) Play() (<-chan []byte, error) {
-	return s.do("PLAY")
-}
-
-func (s Session) Stop() (<-chan []byte, error) {
-	return s.do("STOP")
+func unmarshalStatus(payload []byte) (s statusResponse, err error) {
+	err = json.Unmarshal(payload, &s)
+	return s, err
 }

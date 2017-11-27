@@ -54,6 +54,21 @@ func AppEnvFromStatus(st chromecast.Status, appID, source string) (env chromecas
 	return env, fmt.Errorf("appId could not be found in status")
 }
 
+func TransportForNamespace(st chromecast.Status, namespace string) (transport string, err error) {
+	for _, app := range st.Applications {
+		if app == nil || app.TransportId == nil {
+			continue
+		}
+		for _, ns := range app.Namespaces {
+			if ns == nil || ns.Name != namespace {
+				continue
+			}
+			return *app.TransportId, nil
+		}
+	}
+	return "", fmt.Errorf("no app with namespace '%s' could not be found in status", namespace)
+}
+
 var Launch = launchRequest{
 	Envelope: statusEnv,
 	Payload:  Map{"type": "LAUNCH"},

@@ -140,7 +140,7 @@ func statusCommand(c *cli.Context) {
 
 	session, err := app.Load(media.Item{
 		// ContentId:   "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-		ContentId:  "https://cdn.rawgit.com/mediaelement/mediaelement-files/4d21a042/echo-hereweare.mp4",
+		ContentID:  "https://cdn.rawgit.com/mediaelement/mediaelement-files/4d21a042/echo-hereweare.mp4",
 		StreamType: "BUFFERED",
 		// ContentType: "audio/mpeg",
 	})
