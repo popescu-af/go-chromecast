@@ -1,17 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"time"
 
-	"context"
-
 	"github.com/codegangsta/cli"
+	kitlog "github.com/go-kit/kit/log"
 	"github.com/oliverpool/go-chromecast"
 	clicast "github.com/oliverpool/go-chromecast/cli"
 	"github.com/oliverpool/go-chromecast/command"
-	"github.com/oliverpool/go-chromecast/log"
 )
 
 func checkErr(err error) {
@@ -23,6 +24,12 @@ func checkErr(err error) {
 		}
 		os.Exit(1)
 	}
+}
+
+var logger = kitlog.NewNopLogger()
+
+func init() {
+	log.SetOutput(ioutil.Discard)
 }
 
 func main() {
@@ -67,7 +74,6 @@ func main() {
 		},
 	}
 	app.Run(os.Args)
-	log.Println("Done")
 }
 
 // clientFromContext will try to get a cast client.
@@ -84,13 +90,17 @@ func clientFromContext(ctx context.Context, c *cli.Context) chromecast.Client {
 	checkErr(err)
 	fmt.Printf("Found '%s' (%s:%d)...\n", chr.Name(), chr.IP, chr.Port)
 
-	client, err := clicast.NewClient(ctx, chr.Addr())
+	if c.GlobalBool("debug") {
+		logger = clicast.NewLogger(os.Stdout)
+		log.SetOutput(kitlog.NewStdlibAdapter(logger))
+	}
+
+	client, err := clicast.NewClient(ctx, chr.Addr(), logger)
 	checkErr(err)
 	return client
 }
 
 func statusCommand(c *cli.Context) {
-	log.Debug = c.GlobalBool("debug")
 	ctx, cancel := context.WithTimeout(context.Background(), c.GlobalDuration("timeout"))
 	defer cancel()
 
@@ -105,7 +115,10 @@ func statusCommand(c *cli.Context) {
 }
 
 func discoverCommand(c *cli.Context) {
-	log.Debug = c.GlobalBool("debug")
+	if c.GlobalBool("debug") {
+		logger = clicast.NewLogger(os.Stdout)
+		log.SetOutput(kitlog.NewStdlibAdapter(logger))
+	}
 	timeout := c.GlobalDuration("timeout")
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)

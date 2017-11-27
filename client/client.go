@@ -8,20 +8,31 @@ import (
 	"sync/atomic"
 
 	"github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/log"
 )
 
-func New(ctx context.Context, serializer chromecast.Serializer) *Client {
+func New(ctx context.Context, serializer chromecast.Serializer, logger chromecast.Logger) *Client {
 	c := Client{
 		Serializer: serializer,
+		Logger:     logger,
 	}
 
 	go func() {
-		log.Println("dispatching...")
-		for ctx.Err() == nil {
+		var lastErr error
+		nbErr := 0
+		for {
 			err := c.Dispatch()
 			if err != nil {
-				log.Println("dispatch failed:", err)
+				logger.Log("step", "dispatch", "err", err)
+				if err == lastErr {
+					nbErr++
+					if nbErr > 5 {
+						logger.Log("step", "dispatch-stop", "err", fmt.Errorf("same error %d times: %v", nbErr, err))
+						return
+					}
+				} else {
+					lastErr = err
+					nbErr = 1
+				}
 			}
 		}
 	}()
@@ -31,6 +42,7 @@ func New(ctx context.Context, serializer chromecast.Serializer) *Client {
 
 type Client struct {
 	chromecast.Serializer
+	Logger chromecast.Logger
 
 	requestID uint32
 	mu        sync.Mutex

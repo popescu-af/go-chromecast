@@ -4,18 +4,19 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 
 	"github.com/gogo/protobuf/proto"
 	chromecast "github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/gogoprotobuf/pb"
-	"github.com/oliverpool/go-chromecast/log"
 )
 
 type Serializer struct {
-	Conn io.ReadWriter
-	rMu  sync.Mutex
-	sMu  sync.Mutex
+	Conn   io.ReadWriter
+	Logger chromecast.Logger
+	rMu    sync.Mutex
+	sMu    sync.Mutex
 }
 
 // Receive receives a message
@@ -50,8 +51,13 @@ func (s *Serializer) Receive() (env chromecast.Envelope, pay []byte, err error) 
 		Namespace:   *cmessage.Namespace,
 	}
 
-	log.Printf("%s ⇐ %s [%s]: %+v",
-		env.Destination, env.Source, env.Namespace, *cmessage.PayloadUtf8)
+	s.Logger.Log(
+		"msg", env.Destination+" ⇐ "+env.Source,
+		// "destination", env.Destination,
+		// "source", env.Source,
+		"namespace", env.Namespace,
+		"payload", strings.Replace(*cmessage.PayloadUtf8, `"`, `'`, -1),
+	)
 
 	return env, []byte(*cmessage.PayloadUtf8), nil
 }
@@ -75,7 +81,13 @@ func (s *Serializer) Send(env chromecast.Envelope, pay []byte) error {
 		return fmt.Errorf("failed to marshal message: %s", err)
 	}
 
-	log.Printf("%s ⇒ %s [%s]: %s", env.Source, env.Destination, env.Namespace, *message.PayloadUtf8)
+	s.Logger.Log(
+		"msg", env.Source+" ⇒ "+env.Destination,
+		// "source", env.Source,
+		// "destination", env.Destination,
+		"namespace", env.Namespace,
+		"payload", strings.Replace(*message.PayloadUtf8, `"`, `'`, -1),
+	)
 
 	s.sMu.Lock()
 	defer s.sMu.Unlock()
