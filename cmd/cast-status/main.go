@@ -78,11 +78,11 @@ func main() {
 			fatalf("could not get a session")
 		}
 		if true {
-			ch, err := session.Stop()
+			ch, err := session.Seek(media.Seek(15 * time.Second))
 			if err != nil {
 				fatalf("could not pause")
 			}
-			fmt.Println(<-ch)
+			fmt.Println(string(<-ch))
 		}
 	} else {
 		fmt.Println(" not found")

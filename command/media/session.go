@@ -7,16 +7,19 @@ type Session struct {
 	ID int `json:"mediaSessionId"`
 }
 
-func (s Session) do(cmd string) (<-chan []byte, error) {
+func (s Session) do(cmd string, options ...Option) (<-chan []byte, error) {
 	payload := command.Map{
 		"type":           cmd,
 		"mediaSessionId": s.ID,
 	}
+	for _, opt := range options {
+		opt(payload)
+	}
 	return s.App.request(payload)
 }
 
-func (s Session) doEnsure(cmd, state string) (<-chan bool, error) {
-	req, err := s.do(cmd)
+func (s Session) doEnsure(cmd, state string, options ...Option) (<-chan bool, error) {
+	req, err := s.do(cmd, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -32,16 +35,20 @@ func (s Session) doEnsure(cmd, state string) (<-chan bool, error) {
 	return ch, nil
 }
 
-func (s Session) Pause() (<-chan bool, error) {
-	return s.doEnsure("PAUSE", "PAUSED")
+func (s Session) Pause(options ...Option) (<-chan bool, error) {
+	return s.doEnsure("PAUSE", "PAUSED", options...)
 }
 
-func (s Session) Play() (<-chan bool, error) {
-	return s.doEnsure("PLAY", "PLAYING")
+func (s Session) Seek(options ...Option) (<-chan []byte, error) {
+	return s.do("SEEK", options...)
 }
 
-func (s Session) Stop() (<-chan bool, error) {
-	return s.doEnsure("STOP", "IDLE")
+func (s Session) Stop(options ...Option) (<-chan bool, error) {
+	return s.doEnsure("STOP", "IDLE", options...)
+}
+
+func (s Session) Play(options ...Option) (<-chan bool, error) {
+	return s.doEnsure("PLAY", "PLAYING", options...)
 }
 
 func playerStateIs(sr statusResponse, state string) bool {
