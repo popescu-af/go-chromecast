@@ -34,3 +34,25 @@ func FromStatus(client chromecast.Client, st chromecast.Status) (a App, err erro
 
 	return a, command.Connect.SendTo(client, env.Destination)
 }
+
+type Item struct {
+	ContentId   string `json:"contentId"`
+	StreamType  string `json:"streamType"`
+	ContentType string `json:"contentType"`
+}
+
+func (a App) Load(item Item) error {
+	payload := command.Map{
+		"type":     "LOAD",
+		"media":    item,
+		"autoplay": true,
+		// "currentTime": 0,
+		// "customData":  struct{}{},
+	}
+	response, err := a.Client.Request(a.Envelope, payload)
+	if err != nil {
+		return err
+	}
+	<-response // FIXME: do something with the response?
+	return nil
+}

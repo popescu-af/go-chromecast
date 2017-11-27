@@ -107,23 +107,29 @@ func statusCommand(c *cli.Context) {
 
 	client := clientFromContext(ctx, c)
 
-	// Launch App
-	fmt.Println("App:")
-	app, err := media.New(client)
-	checkErr(err)
-	fmt.Println(app)
-
 	// Get status
 	fmt.Println("Status:")
 	status, err := command.Status.Get(client)
 	checkErr(err)
 
-	time.Sleep(5 * time.Second)
 	// Get App
-	fmt.Println("App (retrieved):")
-	app, err = media.FromStatus(client, status)
+	app, err := media.FromStatus(client, status)
+	if err != nil {
+		fmt.Println("Launching new App")
+		app, err = media.New(client)
+	} else {
+		fmt.Println("App retrieved")
+	}
 	checkErr(err)
 	fmt.Println(app)
+
+	err = app.Load(media.Item{
+		ContentId:   "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+		StreamType:  "BUFFERED",
+		ContentType: "audio/mpeg",
+	})
+	checkErr(err)
+	// time.Sleep(5 * time.Second)
 
 	clicast.FprintStatus(os.Stdout, status)
 }
