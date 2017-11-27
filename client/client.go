@@ -23,10 +23,10 @@ func New(ctx context.Context, serializer chromecast.Serializer, logger chromecas
 			err := c.Dispatch()
 			if err != nil {
 				logger.Log("step", "dispatch", "err", err)
-				if err == lastErr {
+				if lastErr == nil || err.Error() == lastErr.Error() {
 					nbErr++
 					if nbErr > 5 {
-						logger.Log("step", "dispatch-stop", "err", fmt.Errorf("same error %d times: %v", nbErr, err))
+						logger.Log("step", "dispatch-abort", "err", fmt.Errorf("same error %d times: %v", nbErr, err))
 						return
 					}
 				} else {
