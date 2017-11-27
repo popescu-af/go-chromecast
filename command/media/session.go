@@ -15,7 +15,7 @@ func (s Session) do(cmd string) (<-chan []byte, error) {
 	return s.App.request(payload)
 }
 
-func (s Session) ensureDo(cmd, state string) (<-chan bool, error) {
+func (s Session) doEnsure(cmd, state string) (<-chan bool, error) {
 	req, err := s.do(cmd)
 	if err != nil {
 		return nil, err
@@ -33,15 +33,15 @@ func (s Session) ensureDo(cmd, state string) (<-chan bool, error) {
 }
 
 func (s Session) Pause() (<-chan bool, error) {
-	return s.ensureDo("PAUSE", "PAUSED")
+	return s.doEnsure("PAUSE", "PAUSED")
 }
 
 func (s Session) Play() (<-chan bool, error) {
-	return s.ensureDo("PLAY", "PLAYING")
+	return s.doEnsure("PLAY", "PLAYING")
 }
 
-func (s Session) Stop() (<-chan []byte, error) {
-	return s.do("STOP") // TODO can be checked?
+func (s Session) Stop() (<-chan bool, error) {
+	return s.doEnsure("STOP", "IDLE")
 }
 
 func playerStateIs(sr statusResponse, state string) bool {

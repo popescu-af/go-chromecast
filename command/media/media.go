@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/command"
@@ -114,13 +115,34 @@ func (a *App) firstSession(st []Status) (*Session, error) {
 	return nil, fmt.Errorf("no valid SessionId has been found in the status")
 }
 
-func (a *App) Load(item Item) (*Session, error) {
+// LoadOption to customize the loading
+type LoadOption func(command.Map)
+
+func PreventAutoplay(c command.Map) {
+	c["autoplay"] = false
+}
+
+func Seek(t time.Duration) func(command.Map) {
+	return func(c command.Map) {
+		c["currentTime"] = t.Seconds()
+	}
+}
+func CustomData(data interface{}) func(command.Map) {
+	return func(c command.Map) {
+		c["customData"] = data
+	}
+}
+
+func (a *App) Load(item Item, options ...LoadOption) (*Session, error) {
 	payload := command.Map{
 		"type":     "LOAD",
 		"media":    item,
 		"autoplay": true,
 		// "currentTime": 0,
 		// "customData":  struct{}{},
+	}
+	for _, opt := range options {
+		opt(payload)
 	}
 	response, err := a.Client.Request(a.Envelope, payload)
 	if err != nil {

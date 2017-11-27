@@ -144,22 +144,25 @@ func statusCommand(c *cli.Context) {
 		ContentID:  "https://cdn.rawgit.com/mediaelement/mediaelement-files/4d21a042/echo-hereweare.mp4",
 		StreamType: "BUFFERED",
 		// ContentType: "audio/mpeg",
-	})
+	}, media.Seek(40*time.Second))
 	checkErr(err)
 
-	_, err = volume.Set(client, 1)
+	_, err = volume.Set(client, 0)
 	checkErr(err)
+	_ = session
+	/*
 
-	time.Sleep(4 * time.Second)
-	session.Pause()
-	_, err = volume.Mute(client, true)
-	checkErr(err)
+		time.Sleep(4 * time.Second)
+		session.Pause()
+		_, err = volume.Mute(client, true)
+		checkErr(err)
 
-	time.Sleep(4 * time.Second)
-	session.Play()
-	time.Sleep(4 * time.Second)
-	// ch, err := session.Stop()
-	// <-ch
+		time.Sleep(4 * time.Second)
+		session.Play()
+		time.Sleep(4 * time.Second)
+		// ch, err := session.Stop()
+		// <-ch
+	*/
 
 	clicast.FprintStatus(os.Stdout, status)
 }

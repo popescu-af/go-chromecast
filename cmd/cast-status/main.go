@@ -78,7 +78,7 @@ func main() {
 			fatalf("could not get a session")
 		}
 		if true {
-			ch, err := session.Play()
+			ch, err := session.Stop()
 			if err != nil {
 				fatalf("could not pause")
 			}
