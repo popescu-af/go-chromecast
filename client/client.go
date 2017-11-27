@@ -115,7 +115,7 @@ func (c *Client) Dispatch() error {
 		c.sendResponse(*payID.RequestID, pay)
 	}
 
-	if env.Namespace == "*" {
+	if env.Destination == "*" {
 		// broadcast
 		for _, envs := range c.listeners {
 			for _, listeners := range envs {
