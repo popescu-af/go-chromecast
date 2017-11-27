@@ -123,13 +123,18 @@ func statusCommand(c *cli.Context) {
 	checkErr(err)
 	fmt.Println(app)
 
-	err = app.Load(media.Item{
+	session, err := app.Load(media.Item{
 		ContentId:   "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
 		StreamType:  "BUFFERED",
 		ContentType: "audio/mpeg",
 	})
 	checkErr(err)
-	// time.Sleep(5 * time.Second)
+	time.Sleep(4 * time.Second)
+	session.Pause()
+	time.Sleep(4 * time.Second)
+	session.Play()
+	time.Sleep(4 * time.Second)
+	session.Stop()
 
 	clicast.FprintStatus(os.Stdout, status)
 }
