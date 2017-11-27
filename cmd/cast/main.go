@@ -124,13 +124,21 @@ func statusCommand(c *cli.Context) {
 	fmt.Println(app)
 
 	session, err := app.Load(media.Item{
-		ContentId:   "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-		StreamType:  "BUFFERED",
-		ContentType: "audio/mpeg",
+		// ContentId:   "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+		ContentId:  "https://cdn.rawgit.com/mediaelement/mediaelement-files/4d21a042/echo-hereweare.mp4",
+		StreamType: "BUFFERED",
+		// ContentType: "audio/mpeg",
 	})
 	checkErr(err)
+
+	_, err = command.Volume.Set(client, 1)
+	checkErr(err)
+
 	time.Sleep(4 * time.Second)
 	session.Pause()
+	_, err = command.Volume.Mute(client, true)
+	checkErr(err)
+
 	time.Sleep(4 * time.Second)
 	session.Play()
 	time.Sleep(4 * time.Second)
