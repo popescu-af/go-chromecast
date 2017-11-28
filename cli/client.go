@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/oliverpool/go-chromecast"
 
@@ -33,4 +34,13 @@ func NewClient(ctx context.Context, addr string, logger chromecast.Logger) (*cli
 	go heartbeat.RespondToPing(c, c)
 
 	return c, command.Connect.Send(c)
+}
+
+func GetClient(ctx context.Context, host string, port int, name string, logger chromecast.Logger) (*client.Client, error) {
+	chr, err := GetDevice(ctx, host, port, name)
+	if err != nil {
+		return nil, fmt.Errorf("could not get a device: %v", err)
+	}
+
+	return NewClient(ctx, chr.Addr(), logger)
 }

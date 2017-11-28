@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gosuri/uiprogress"
 	"github.com/oliverpool/go-chromecast"
 
 	kitlog "github.com/go-kit/kit/log"
@@ -49,7 +50,7 @@ func (cs *localStatus) update(cstatus chromecast.Status, mstatus media.Status) {
 	if time.Since(cs.orderSent) < time.Second {
 		return
 	}
-	fmt.Println("[up]")
+	// fmt.Println("[up]")
 	if cstatus.Volume != nil {
 		cs.volume = *cstatus.Volume.Level
 		cs.muted = *cstatus.Volume.Muted
@@ -63,6 +64,51 @@ func (cs *localStatus) sent() {
 }
 
 func remote() int {
+	if false {
+		ctx := context.Background()
+
+		fmt.Print("Searching device...")
+		client, err := cli.GetClient(ctx, "", 0, "", logger)
+		if err != nil {
+			return fatalf("could not get a client: %v", err)
+		}
+		fmt.Println(" OK")
+
+		fmt.Print("\nGetting receiver status...")
+		status, err := command.Status.Get(client)
+		if err != nil {
+			return fatalf("could not get status: %v", err)
+		}
+		fmt.Println(" OK")
+		cli.FprintStatus(os.Stdout, status)
+
+		// Get Media app
+		fmt.Print("\nLooking for a media app...")
+		app, err := media.FromStatus(client, status)
+		if err != nil {
+			return fatalf(" not found")
+		}
+		fmt.Println(" OK")
+
+		go app.UpdateStatus()
+
+		_, err = app.GetStatus()
+		if err != nil {
+			return fatalf("could not get media status: %v", err)
+		}
+		session, err := app.CurrentSession()
+		if err != nil {
+			return fatalf("could not get a session")
+		}
+		_ = session
+	}
+
+	/*
+
+
+
+	 */
+
 	kill := make(chan struct{})
 	ch := make(chan cli.KeyPress, 10)
 
@@ -71,11 +117,43 @@ func remote() int {
 
 	fmt.Println("Ready:")
 
+	duration := 159 * time.Minute
+	total := int(duration.Seconds())
+
+	bar := uiprogress.AddBar(total)
+	bar.Width = 40
+	uiprogress.Start()
+
 	var lstatus localStatus
+	lstatus.playing = true
+	var fakeTime float64
+
+	bar.PrependFunc(func(b *uiprogress.Bar) string {
+		if lstatus.playing {
+			return " Playing "
+		}
+		return "[paused] "
+	})
+	bar.AppendFunc(func(b *uiprogress.Bar) string {
+		return fmt.Sprintf("%8s/%8s", lstatus.time.Round(time.Second), duration.Round(time.Second))
+	})
+
+	fakePlay := true
 	go func() {
 		for {
-			lstatus.update(chromecast.Status{}, media.Status{})
+			state := "PLAYING"
+			if !lstatus.playing {
+				state = "PAUSED"
+			}
+			lstatus.update(chromecast.Status{}, media.Status{
+				CurrentTime: fakeTime,
+				PlayerState: state,
+			})
+			bar.Set(int(lstatus.time.Seconds()))
 			time.Sleep(500 * time.Millisecond)
+			if fakePlay {
+				fakeTime += .5
+			}
 		}
 	}()
 
@@ -83,13 +161,16 @@ func remote() int {
 		for c := range ch {
 			switch {
 			case c.Type == cli.Escape:
+				uiprogress.Stop()
 				fmt.Println("bye")
 				return 0
 			case c.Type == cli.SpaceBar:
-				fmt.Println("play/pause")
+				lstatus.playing = !lstatus.playing
+				fakePlay = lstatus.playing
 			case c.Type == cli.LowerCaseLetter:
 				switch c.Key {
 				case 'q':
+					uiprogress.Stop()
 					fmt.Println("stop")
 					return 0
 				case 'm':
@@ -104,9 +185,11 @@ func remote() int {
 				case cli.Down:
 					fmt.Println("volume down")
 				case cli.Left:
-					fmt.Println("back 5s")
+					lstatus.time -= 5 * time.Second
+					fakeTime -= 5
 				case cli.Right:
-					fmt.Println("forward 10s")
+					lstatus.time += 10 * time.Second
+					fakeTime += 10
 				}
 			default:
 				fmt.Println(c)
@@ -115,52 +198,5 @@ func remote() int {
 		}
 	}
 
-	ctx := context.Background()
-
-	fmt.Print("Searching device...")
-	chr, err := cli.GetDevice(ctx, "", 0, "")
-	if err != nil {
-		return fatalf("could not get a device: %v", err)
-	}
-	fmt.Printf(" OK\n  '%s' (%s:%d)\n", chr.Name(), chr.IP, chr.Port)
-
-	client, err := cli.NewClient(ctx, chr.Addr(), logger)
-	if err != nil {
-		return fatalf("could not get a client: %v", err)
-	}
-
-	fmt.Print("\nGetting receiver status...")
-	status, err := command.Status.Get(client)
-	if err != nil {
-		return fatalf("could not get status: %v", err)
-	}
-	fmt.Println(" OK")
-	cli.FprintStatus(os.Stdout, status)
-
-	// Get Media app
-	fmt.Print("\nLooking for a media app...")
-	app, err := media.FromStatus(client, status)
-	if err != nil {
-		return fatalf(" not found")
-	}
-	fmt.Println(" OK")
-
-	go app.UpdateStatus()
-	_, err = app.GetStatus()
-	if err != nil {
-		return fatalf("could not get media status: %v", err)
-	}
-	session, err := app.CurrentSession()
-	if err != nil {
-		return fatalf("could not get a session")
-	}
-
-	if true {
-		ch, err := session.Seek(media.Seek(15 * time.Second))
-		if err != nil {
-			return fatalf("could not pause")
-		}
-		fmt.Println(string(<-ch))
-	}
 	return 0
 }
