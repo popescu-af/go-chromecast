@@ -1,5 +1,10 @@
 package chromecast
 
+type Launcher interface {
+	Launch(appID string) (Status, error)
+	Stop() (Status, error)
+}
+
 type StatusResponse struct {
 	Status *Status `json:"status"`
 }

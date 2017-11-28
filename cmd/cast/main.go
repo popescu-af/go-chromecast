@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/oliverpool/go-chromecast/command/receiver"
+
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/oliverpool/go-chromecast"
 	clicast "github.com/oliverpool/go-chromecast/cli"
@@ -119,7 +121,10 @@ func statusCommand(c *cli.Context) {
 	app, err := media.FromStatus(client, status)
 	if err != nil {
 		fmt.Println("Launching new " + defaultreceiver.Name)
-		app, err = media.Launch(client, defaultreceiver.ID)
+		launcher := receiver.Launcher{Requester: client}
+		status, err = launcher.Launch(defaultreceiver.ID)
+		checkErr(err)
+		app, err = media.FromStatus(client, status)
 	} else {
 		fmt.Println("App retrieved")
 	}

@@ -10,17 +10,33 @@ import (
 
 const Namespace = "urn:x-cast:com.google.cast.receiver"
 
-func Launch(requester chromecast.Requester, id string) (st chromecast.Status, err error) {
-	env := chromecast.Envelope{
-		Source:      command.DefaultSource,
-		Destination: command.DefaultDestination,
-		Namespace:   Namespace,
-	}
+var env = chromecast.Envelope{
+	Source:      command.DefaultSource,
+	Destination: command.DefaultDestination,
+	Namespace:   Namespace,
+}
+
+type Launcher struct {
+	Requester chromecast.Requester
+}
+
+func (l Launcher) Launch(appID string) (st chromecast.Status, err error) {
 	pay := command.Map{
 		"type":  "LAUNCH",
-		"appId": id,
+		"appId": appID,
 	}
-	response, err := requester.Request(env, pay)
+	return l.statusRequest(pay)
+}
+
+func (l Launcher) Stop() (st chromecast.Status, err error) {
+	pay := command.Map{
+		"type": "STOP",
+	}
+	return l.statusRequest(pay)
+}
+
+func (l Launcher) statusRequest(pay chromecast.IdentifiablePayload) (st chromecast.Status, err error) {
+	response, err := l.Requester.Request(env, pay)
 	if err != nil {
 		return st, err
 	}

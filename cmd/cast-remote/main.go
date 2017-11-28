@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/oliverpool/go-chromecast/cli/local"
+	"github.com/oliverpool/go-chromecast/command/receiver"
 	"github.com/oliverpool/go-chromecast/command/volume"
 
 	"github.com/gosuri/uiprogress"
@@ -160,8 +161,8 @@ func remote() int {
 			case 'q':
 				uiprogress.Stop()
 				fmt.Println("quit")
-				st, err := app.Stop()
-				fmt.Println(st, err)
+				launcher := receiver.Launcher{Requester: client}
+				launcher.Stop()
 				return 0
 			case 'm':
 				volume.Mute(client, lstatus.ToggleMute())
