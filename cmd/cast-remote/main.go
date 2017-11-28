@@ -102,7 +102,9 @@ func remote() int {
 	if err != nil {
 		return fatalf("could not get a session: %v", err)
 	}
-	fmt.Println(" OK\n")
+	fmt.Println(" OK")
+
+	fmt.Println("\n Play/Pause: <space>  Seek: ←/→  Volume: ↑/↓/m  Stop: s  Quit: q  Disconnect: <Esc>")
 
 	kill := make(chan struct{})
 	ch := make(chan cli.KeyPress, 10)
