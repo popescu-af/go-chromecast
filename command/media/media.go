@@ -8,6 +8,7 @@ import (
 
 	"github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/command"
+	"github.com/oliverpool/go-chromecast/command/receiver"
 )
 
 // https://developers.google.com/cast/docs/reference/messages
@@ -23,7 +24,7 @@ type App struct {
 }
 
 func Launch(client chromecast.Client, id string) (*App, error) {
-	st, err := command.Launch.App(client, id)
+	st, err := receiver.Launch(client, id)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +38,7 @@ func FromStatus(client chromecast.Client, st chromecast.Status) (a *App, err err
 	}
 	a = &App{
 		Envelope: chromecast.Envelope{
-			Source:      command.Status.Envelope.Source,
+			Source:      command.DefaultSource,
 			Destination: transport,
 			Namespace:   Namespace,
 		},
@@ -163,6 +164,21 @@ func (a *App) Load(item Item, options ...Option) (*Session, error) {
 
 func (a *App) GetStatus() ([]Status, error) {
 	payload := command.Map{"type": "GET_STATUS"}
+	response, err := a.Client.Request(a.Envelope, payload)
+	if err != nil {
+		return nil, err
+	}
+	body := <-response
+
+	s, err := unmarshalStatus(body)
+	if err == nil {
+		a.setStatus(s.Status)
+	}
+	return s.Status, err
+}
+
+func (a *App) Stop() ([]Status, error) {
+	payload := command.Map{"type": "STOP"}
 	response, err := a.Client.Request(a.Envelope, payload)
 	if err != nil {
 		return nil, err

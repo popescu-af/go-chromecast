@@ -151,11 +151,17 @@ func remote() int {
 			}
 		case c.Type == cli.LowerCaseLetter:
 			switch c.Key {
-			case 'q':
+			case 's':
 				uiprogress.Stop()
 				fmt.Println("stop")
 				ch, _ := session.Stop()
 				<-ch
+				return 0
+			case 'q':
+				uiprogress.Stop()
+				fmt.Println("quit")
+				st, err := app.Stop()
+				fmt.Println(st, err)
 				return 0
 			case 'm':
 				volume.Mute(client, lstatus.ToggleMute())

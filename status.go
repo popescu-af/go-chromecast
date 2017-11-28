@@ -1,5 +1,9 @@
 package chromecast
 
+type StatusResponse struct {
+	Status *Status `json:"status"`
+}
+
 type Status struct {
 	Applications []*ApplicationSession `json:"applications"`
 	Volume       *Volume               `json:"volume,omitempty"`

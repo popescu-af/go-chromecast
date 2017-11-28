@@ -125,20 +125,6 @@ func statusCommand(c *cli.Context) {
 	}
 	checkErr(err)
 	go app.UpdateStatus()
-	fmt.Println(app)
-
-	fmt.Println(app.GetStatus())
-
-	if false {
-		curSession, err := app.CurrentSession()
-		for err != nil {
-			fmt.Println("waiting for valid session")
-			time.Sleep(time.Second)
-			curSession, err = app.CurrentSession()
-		}
-		curSession.Play()
-		return
-	}
 
 	session, err := app.Load(media.Item{
 		// ContentId:   "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",

@@ -4,9 +4,12 @@ import (
 	"github.com/oliverpool/go-chromecast"
 )
 
+const DefaultSource = "sender-0"
+const DefaultDestination = "receiver-0"
+
 var connectionEnv = chromecast.Envelope{
-	Source:      "sender-0",
-	Destination: "receiver-0",
+	Source:      DefaultSource,
+	Destination: DefaultDestination,
 	Namespace:   "urn:x-cast:com.google.cast.tp.connection",
 }
 
