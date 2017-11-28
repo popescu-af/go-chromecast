@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"strings"
-	"time"
 
 	"github.com/grandcat/zeroconf"
 	chromecast "github.com/oliverpool/go-chromecast"
@@ -13,9 +12,7 @@ import (
 )
 
 type Scanner struct {
-	// The chromecasts have 'Timeout' time to reply to each probe.
-	Timeout time.Duration
-	Logger  chromecast.Logger
+	Logger chromecast.Logger
 }
 
 func (s Scanner) log(keyvals ...interface{}) {
@@ -23,7 +20,7 @@ func (s Scanner) log(keyvals ...interface{}) {
 		vals := make([]interface{}, 0, len(keyvals)+2)
 		vals = append(vals, "package", "zeroconf")
 		vals = append(vals, keyvals...)
-		s.Logger.Log(vals)
+		s.Logger.Log(vals...)
 	}
 }
 
@@ -40,12 +37,10 @@ func (s Scanner) Scan(ctx context.Context, results chan<- *chromecast.Device) er
 	}
 
 	entries := make(chan *zeroconf.ServiceEntry, 5)
-	go func() {
-		err = resolver.Browse(ctx, "_googlecast._tcp", "local", entries)
-		if err != nil {
-			s.log("step", "Browse", "err", err)
-		}
-	}()
+	err = resolver.Browse(ctx, "_googlecast._tcp", "local", entries)
+	if err != nil {
+		return fmt.Errorf("fail to browse services: %v", err)
+	}
 
 	// decode entries
 	for e := range entries {

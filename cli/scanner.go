@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"time"
-
 	"context"
 
 	"github.com/oliverpool/go-chromecast"
@@ -10,10 +8,10 @@ import (
 	"github.com/oliverpool/go-chromecast/zeroconf"
 )
 
-func Scan(ctx context.Context) chan *chromecast.Device {
+func Scan(ctx context.Context, logger chromecast.Logger) chan *chromecast.Device {
 	all := make(chan *chromecast.Device, 5)
 	scanner := zeroconf.Scanner{
-		Timeout: 3 * time.Second,
+		Logger: logger,
 	}
 	go scanner.Scan(ctx, all)
 

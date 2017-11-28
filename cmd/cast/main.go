@@ -183,7 +183,7 @@ func discoverCommand(c *cli.Context) {
 	defer cancel()
 
 	fmt.Printf("Running scanner for %s...\n", timeout)
-	for client := range clicast.Scan(ctx) {
+	for client := range clicast.Scan(ctx, logger) {
 		fmt.Printf("Found: %s:%d '%s' (%s: %s) %s\n", client.IP, client.Port, client.Name(), client.Type(), client.ID(), client.Status())
 	}
 	fmt.Println("Done")

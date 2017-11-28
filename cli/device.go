@@ -2,7 +2,6 @@ package cli
 
 import (
 	"net"
-	"time"
 
 	"context"
 
@@ -28,9 +27,7 @@ func GetDevice(ctx context.Context, host string, port int, name string) (*chrome
 	}
 
 	find := discover.Service{
-		Scanner: zeroconf.Scanner{
-			Timeout: 3 * time.Second,
-		},
+		Scanner: zeroconf.Scanner{},
 	}
 	if name != "" {
 		return find.Named(ctx, name)
