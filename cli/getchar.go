@@ -12,9 +12,9 @@ func readStdin(out chan<- []byte, done <-chan struct{}) func() {
 	exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
 
 	go func() {
-		b := make([]byte, 10)
 		var n int
 		for {
+			b := make([]byte, 10)
 			n, _ = os.Stdin.Read(b)
 			select {
 			case <-done:

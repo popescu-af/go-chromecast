@@ -22,7 +22,7 @@ import (
 var logger = kitlog.NewNopLogger()
 
 func init() {
-	logger = cli.NewLogger(os.Stdout)
+	// logger = cli.NewLogger(os.Stdout)
 	log.SetOutput(kitlog.NewStdlibAdapter(logger))
 }
 
@@ -63,7 +63,6 @@ func newStreakFactor() func() int64 {
 }
 
 func remote() int {
-	//*
 	ctx := context.Background()
 
 	fmt.Print("Searching device...")
@@ -102,7 +101,6 @@ func remote() int {
 	if err != nil {
 		return fatalf("could not get a session")
 	}
-	//*/
 
 	kill := make(chan struct{})
 	ch := make(chan cli.KeyPress, 10)
@@ -110,11 +108,7 @@ func remote() int {
 	defer cli.ReadStdinKeys(ch, kill)()
 	defer close(kill)
 
-	fmt.Println("Ready:")
-
-	duration := time.Duration(appStatus[0].Item.Duration) * time.Second
-	total := int(duration.Seconds())
-	fmt.Println(total)
+	total := int(appStatus[0].Item.Duration)
 
 	bar := uiprogress.AddBar(total)
 	bar.Width = 40
@@ -142,48 +136,46 @@ func remote() int {
 		}
 	}()
 
-	if true {
-		for c := range ch {
-			switch {
-			case c.Type == cli.Escape:
-				uiprogress.Stop()
-				fmt.Println("bye")
-				return 0
-			case c.Type == cli.SpaceBar:
-				if lstatus.TogglePlay() {
-					session.Play()
-				} else {
-					session.Pause()
-				}
-			case c.Type == cli.LowerCaseLetter:
-				switch c.Key {
-				case 'q':
-					uiprogress.Stop()
-					fmt.Println("stop")
-					ch, _ := session.Stop()
-					<-ch
-					return 0
-				case 'm':
-					volume.Mute(client, lstatus.ToggleMute())
-				default:
-					fmt.Println("key: " + string(c.Key))
-				}
-			case c.Type == cli.Arrow:
-				switch c.Key {
-				case cli.Up:
-					volume.Set(client, lstatus.IncrVolume(.1))
-				case cli.Down:
-					volume.Set(client, lstatus.IncrVolume(-.1))
-				case cli.Left:
-					diff := -time.Duration(backwardFactor()) * 5 * time.Second
-					session.Seek(media.Seek(lstatus.SeekBy(diff)))
-				case cli.Right:
-					diff := time.Duration(forwardFactor()) * 10 * time.Second
-					session.Seek(media.Seek(lstatus.SeekBy(diff)))
-				}
-			default:
-				fmt.Println(c)
+	for c := range ch {
+		switch {
+		case c.Type == cli.Escape:
+			uiprogress.Stop()
+			fmt.Println("bye")
+			return 0
+		case c.Type == cli.SpaceBar:
+			if lstatus.TogglePlay() {
+				session.Play()
+			} else {
+				session.Pause()
 			}
+		case c.Type == cli.LowerCaseLetter:
+			switch c.Key {
+			case 'q':
+				uiprogress.Stop()
+				fmt.Println("stop")
+				ch, _ := session.Stop()
+				<-ch
+				return 0
+			case 'm':
+				volume.Mute(client, lstatus.ToggleMute())
+				// default:
+				// 	fmt.Println("key: " + string(c.Key))
+			}
+		case c.Type == cli.Arrow:
+			switch c.Key {
+			case cli.Up:
+				volume.Set(client, lstatus.IncrVolume(.1))
+			case cli.Down:
+				volume.Set(client, lstatus.IncrVolume(-.1))
+			case cli.Left:
+				diff := -time.Duration(backwardFactor()) * 5 * time.Second
+				session.Seek(media.Seek(lstatus.SeekBy(diff)))
+			case cli.Right:
+				diff := time.Duration(forwardFactor()) * 10 * time.Second
+				session.Seek(media.Seek(lstatus.SeekBy(diff)))
+			}
+			// default:
+			// 	fmt.Println(c)
 		}
 	}
 
