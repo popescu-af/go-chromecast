@@ -32,10 +32,6 @@ func fatalf(format string, a ...interface{}) int {
 	return 1
 }
 
-func secondsToDuration(s float64) time.Duration {
-	return time.Duration(s * float64(time.Second))
-}
-
 func main() {
 	os.Exit(remote())
 }
@@ -84,12 +80,13 @@ func remote() int {
 	fmt.Print("\nLooking for a media app...")
 	app, err := media.FromStatus(client, status)
 	if err != nil {
-		return fatalf(" not found")
+		return fatalf(" not found: %v", err)
 	}
 	fmt.Println(" OK")
 
 	go app.UpdateStatus()
 
+	fmt.Print("Looking for a playing item...")
 	appStatus, err := app.GetStatus()
 	for err != nil || len(appStatus) == 0 || appStatus[0].Item == nil || appStatus[0].Item.Duration == 0 {
 		if ctx.Err() != nil {
@@ -97,10 +94,14 @@ func remote() int {
 		}
 		appStatus, err = app.GetStatus()
 	}
+	fmt.Println(" OK")
+
+	fmt.Print("Getting a session...")
 	session, err := app.CurrentSession()
 	if err != nil {
-		return fatalf("could not get a session")
+		return fatalf("could not get a session: %v", err)
 	}
+	fmt.Println(" OK\n")
 
 	kill := make(chan struct{})
 	ch := make(chan cli.KeyPress, 10)

@@ -20,6 +20,5 @@ type Client interface {
 	Listener
 	Sender
 	Requester
-	Dispatch() error
 	Close() error
 }

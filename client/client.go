@@ -1,7 +1,6 @@
 package client
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -10,7 +9,7 @@ import (
 	"github.com/oliverpool/go-chromecast"
 )
 
-func New(ctx context.Context, serializer chromecast.Serializer, logger chromecast.Logger) *Client {
+func New(serializer chromecast.Serializer, logger chromecast.Logger) *Client {
 	c := Client{
 		Serializer: serializer,
 		Logger:     logger,

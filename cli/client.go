@@ -24,7 +24,7 @@ func NewClient(ctx context.Context, addr string, logger chromecast.Logger) (*cli
 		Conn:   conn,
 		Logger: logger,
 	}
-	c := client.New(ctx, &serializer, logger)
+	c := client.New(&serializer, logger)
 
 	go func() {
 		<-ctx.Done()
