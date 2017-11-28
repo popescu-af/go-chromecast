@@ -143,7 +143,8 @@ func statusCommand(c *cli.Context) {
 	session, err := app.Load(media.Item{
 		// ContentId:   "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
 		// ContentID:  "https://cdn.rawgit.com/mediaelement/mediaelement-files/4d21a042/echo-hereweare.mp4",
-		ContentID:  "http://mirrors.standaloneinstaller.com/video-sample/star_trails.mp4", // seekable
+		// ContentID:  "http://mirrors.standaloneinstaller.com/video-sample/star_trails.mp4", // seekable
+		ContentID:  "http://192.168.178.57:8100/Kingsman.mp4", // local
 		StreamType: "BUFFERED",
 		// ContentType: "audio/mpeg",
 	}, media.Seek(1*time.Second))

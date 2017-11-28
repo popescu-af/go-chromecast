@@ -103,6 +103,12 @@ func (a *App) CurrentSession() (*Session, error) {
 	return a.firstSession(a.latestStatus)
 }
 
+func (a *App) LatestStatus() []Status {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.latestStatus
+}
+
 func (a *App) firstSession(st []Status) (*Session, error) {
 	for _, status := range st {
 		if status.SessionID > 0 {
