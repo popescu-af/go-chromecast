@@ -111,9 +111,10 @@ const (
 	Unsupported
 )
 
+// Arrows
 const (
-	ArrowUp byte = 65 + iota
-	ArrowDown
-	ArrowRight
-	ArrowLeft
+	Up byte = 65 + iota
+	Down
+	Right
+	Left
 )
