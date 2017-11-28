@@ -8,7 +8,7 @@ import (
 
 	chromecast "github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/discover"
-	"github.com/oliverpool/go-chromecast/mdns"
+	"github.com/oliverpool/go-chromecast/zeroconf"
 )
 
 // If host is set, it will be used (with its port).
@@ -28,7 +28,7 @@ func GetDevice(ctx context.Context, host string, port int, name string) (*chrome
 	}
 
 	find := discover.Service{
-		Scanner: mdns.Scanner{
+		Scanner: zeroconf.Scanner{
 			Timeout: 3 * time.Second,
 		},
 	}

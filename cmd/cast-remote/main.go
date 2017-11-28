@@ -22,7 +22,7 @@ import (
 var logger = kitlog.NewNopLogger()
 
 func init() {
-	// logger = cli.NewLogger(os.Stdout)
+	logger = cli.NewLogger(os.Stdout)
 	log.SetOutput(kitlog.NewStdlibAdapter(logger))
 }
 

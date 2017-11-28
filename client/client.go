@@ -115,6 +115,8 @@ func (c *Client) Dispatch() error {
 		c.sendResponse(*payID.RequestID, pay)
 	}
 
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if env.Destination == "*" {
 		// broadcast
 		for _, listeners := range c.listeners {
