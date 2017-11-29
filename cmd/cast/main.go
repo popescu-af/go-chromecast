@@ -13,10 +13,8 @@ import (
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/oliverpool/go-chromecast"
 	clicast "github.com/oliverpool/go-chromecast/cli"
-	"github.com/oliverpool/go-chromecast/command"
 	"github.com/oliverpool/go-chromecast/command/media"
 	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver"
-	"github.com/oliverpool/go-chromecast/command/volume"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -111,9 +109,12 @@ func statusCommand(c *cli.Context) {
 
 	client := clientFromContext(ctx, c)
 
+	launcher := receiver.Launcher{
+		Requester: client,
+	}
 	// Get status
 	fmt.Println("Status:")
-	status, err := command.Status.Get(client)
+	status, err := launcher.Status()
 	checkErr(err)
 	clicast.FprintStatus(os.Stdout, status)
 
@@ -141,15 +142,11 @@ func statusCommand(c *cli.Context) {
 	}, media.Seek(1*time.Second))
 	checkErr(err)
 
-	_, err = volume.Set(client, 0)
-	checkErr(err)
 	_ = session
 	/*
 
 		time.Sleep(4 * time.Second)
 		session.Pause()
-		_, err = volume.Mute(client, true)
-		checkErr(err)
 
 		time.Sleep(4 * time.Second)
 		session.Play()
@@ -158,7 +155,7 @@ func statusCommand(c *cli.Context) {
 		// <-ch
 	*/
 
-	status, err = command.Status.Get(client)
+	status, err = launcher.Status()
 	checkErr(err)
 	clicast.FprintStatus(os.Stdout, status)
 }

@@ -20,6 +20,13 @@ type Launcher struct {
 	Requester chromecast.Requester
 }
 
+func (l Launcher) Status() (st chromecast.Status, err error) {
+	pay := command.Map{
+		"type": "GET_STATUS",
+	}
+	return l.statusRequest(pay)
+}
+
 func (l Launcher) Launch(appID string) (st chromecast.Status, err error) {
 	pay := command.Map{
 		"type":  "LAUNCH",
@@ -31,6 +38,28 @@ func (l Launcher) Launch(appID string) (st chromecast.Status, err error) {
 func (l Launcher) Stop() (st chromecast.Status, err error) {
 	pay := command.Map{
 		"type": "STOP",
+	}
+	return l.statusRequest(pay)
+}
+
+func (l Launcher) SetVolume(level float64) (st chromecast.Status, err error) {
+	vol := chromecast.Volume{
+		Level: &level,
+	}
+	pay := command.Map{
+		"type":   "SET_VOLUME",
+		"volume": vol,
+	}
+	return l.statusRequest(pay)
+}
+
+func (l Launcher) Mute(muted bool) (st chromecast.Status, err error) {
+	vol := chromecast.Volume{
+		Muted: &muted,
+	}
+	pay := command.Map{
+		"type":   "SET_VOLUME",
+		"volume": vol,
 	}
 	return l.statusRequest(pay)
 }

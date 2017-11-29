@@ -10,8 +10,8 @@ import (
 	kitlog "github.com/go-kit/kit/log"
 
 	"github.com/oliverpool/go-chromecast/cli"
-	"github.com/oliverpool/go-chromecast/command"
 	"github.com/oliverpool/go-chromecast/command/media"
+	"github.com/oliverpool/go-chromecast/command/receiver"
 )
 
 var logger = kitlog.NewNopLogger()
@@ -36,19 +36,18 @@ func main() {
 	ctx := context.Background()
 
 	fmt.Print("Searching device...")
-	chr, err := cli.GetDevice(ctx, "", 0, "")
-	if err != nil {
-		fatalf("could not get a device: %v", err)
-	}
-	fmt.Printf(" OK\n  '%s' (%s:%d)\n", chr.Name(), chr.IP, chr.Port)
-
-	client, err := cli.NewClient(ctx, chr.Addr(), logger)
+	client, err := cli.GetClient(ctx, "", 0, "", logger)
 	if err != nil {
 		fatalf("could not get a client: %v", err)
 	}
+	fmt.Println(" OK")
+
+	launcher := receiver.Launcher{
+		Requester: client,
+	}
 
 	fmt.Print("\nGetting receiver status...")
-	status, err := command.Status.Get(client)
+	status, err := launcher.Status()
 	if err != nil {
 		fatalf("could not get status: %v", err)
 	}

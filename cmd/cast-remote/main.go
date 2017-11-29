@@ -9,14 +9,12 @@ import (
 
 	"github.com/oliverpool/go-chromecast/cli/local"
 	"github.com/oliverpool/go-chromecast/command/receiver"
-	"github.com/oliverpool/go-chromecast/command/volume"
 
 	"github.com/gosuri/uiprogress"
 
 	kitlog "github.com/go-kit/kit/log"
 
 	"github.com/oliverpool/go-chromecast/cli"
-	"github.com/oliverpool/go-chromecast/command"
 	"github.com/oliverpool/go-chromecast/command/media"
 )
 
@@ -46,9 +44,9 @@ func newStreakFactor() func() int64 {
 		if now.Sub(previousHit) < 50*time.Millisecond {
 			switch {
 			case now.Sub(streakStart) > 3*time.Second:
-				return 12
+				return 6
 			case now.Sub(streakStart) > 2*time.Second:
-				return 8
+				return 4
 			case now.Sub(streakStart) > time.Second:
 				return 2
 			}
@@ -69,8 +67,12 @@ func remote() int {
 	}
 	fmt.Println(" OK")
 
+	launcher := receiver.Launcher{
+		Requester: client,
+	}
+
 	fmt.Print("\nGetting receiver status...")
-	status, err := command.Status.Get(client)
+	status, err := launcher.Status()
 	if err != nil {
 		return fatalf("could not get status: %v", err)
 	}
@@ -163,20 +165,19 @@ func remote() int {
 			case 'q':
 				uiprogress.Stop()
 				fmt.Println("quit")
-				launcher := receiver.Launcher{Requester: client}
 				launcher.Stop()
 				return 0
 			case 'm':
-				volume.Mute(client, lstatus.ToggleMute())
+				launcher.Mute(lstatus.ToggleMute())
 				// default:
 				// 	fmt.Println("key: " + string(c.Key))
 			}
 		case c.Type == cli.Arrow:
 			switch c.Key {
 			case cli.Up:
-				volume.Set(client, lstatus.IncrVolume(.1))
+				launcher.SetVolume(lstatus.IncrVolume(.1))
 			case cli.Down:
-				volume.Set(client, lstatus.IncrVolume(-.1))
+				launcher.SetVolume(lstatus.IncrVolume(-.1))
 			case cli.Left:
 				diff := -time.Duration(backwardFactor()) * 5 * time.Second
 				session.Seek(media.Seek(lstatus.SeekBy(diff)))
