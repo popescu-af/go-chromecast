@@ -60,7 +60,7 @@ func main() {
 	if err == nil {
 		fmt.Println(" OK")
 		go app.UpdateStatus()
-		st, err := app.GetStatus()
+		st, err := app.Status()
 		if err != nil {
 			fatalf("could not get media status: %v", err)
 		}

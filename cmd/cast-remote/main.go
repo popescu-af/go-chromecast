@@ -90,12 +90,12 @@ func remote() int {
 	go app.UpdateStatus()
 
 	fmt.Print("Looking for a playing item...")
-	appStatus, err := app.GetStatus()
+	appStatus, err := app.Status()
 	for err != nil || len(appStatus) == 0 || appStatus[0].Item == nil || appStatus[0].Item.Duration == 0 {
 		if ctx.Err() != nil {
 			return fatalf("could not get media status: %v", err)
 		}
-		appStatus, err = app.GetStatus()
+		appStatus, err = app.Status()
 	}
 	fmt.Println(" OK")
 
@@ -135,7 +135,7 @@ func remote() int {
 
 	go func() {
 		for {
-			app.GetStatus()
+			app.Status()
 			elapsed := lstatus.UpdateMedia(app.LatestStatus()[0])
 			bar.Set(elapsed)
 			time.Sleep(1000 * time.Millisecond)

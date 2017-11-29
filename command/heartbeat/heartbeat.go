@@ -11,11 +11,15 @@ var pingEnv = chromecast.Envelope{
 	Namespace:   "urn:x-cast:com.google.cast.tp.heartbeat",
 }
 
-func RespondToPing(listener chromecast.Listener, sender chromecast.Sender) {
+func RespondToPing(client chromecast.Client) {
 	ch := make(chan []byte, 1)
-	listener.Listen(pingEnv, "PING", ch)
+	client.Listen(pingEnv, "PING", ch)
 
 	for range ch {
-		sender.Send(pingEnv, command.Map{"type": "PONG"})
+		client.Send(pingEnv, command.Map{"type": "PONG"})
 	}
+}
+
+func SendPing(listener chromecast.Listener, sender chromecast.Sender) {
+	sender.Send(pingEnv, command.Map{"type": "PING"})
 }

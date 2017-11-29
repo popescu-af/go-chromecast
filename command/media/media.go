@@ -153,7 +153,7 @@ func (a *App) Load(item Item, options ...Option) (*Session, error) {
 	return a.firstSession(s.Status)
 }
 
-func (a *App) GetStatus() ([]Status, error) {
+func (a *App) Status() ([]Status, error) {
 	payload := command.Map{"type": "GET_STATUS"}
 	response, err := a.Client.Request(a.Envelope, payload)
 	if err != nil {

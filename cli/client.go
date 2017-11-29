@@ -31,7 +31,7 @@ func NewClient(ctx context.Context, addr string, logger chromecast.Logger) (*cli
 		command.Close.Send(c)
 		conn.Close()
 	}()
-	go heartbeat.RespondToPing(c, c)
+	go heartbeat.RespondToPing(c)
 
 	return c, command.Connect.Send(c)
 }
