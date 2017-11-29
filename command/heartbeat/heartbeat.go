@@ -20,6 +20,8 @@ func RespondToPing(client chromecast.Client) {
 	}
 }
 
+/*
 func SendPing(listener chromecast.Listener, sender chromecast.Sender) {
 	sender.Send(pingEnv, command.Map{"type": "PING"})
 }
+*/
