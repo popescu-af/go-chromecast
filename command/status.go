@@ -18,5 +18,5 @@ func TransportForNamespace(st chromecast.Status, namespace string) (transport st
 			return *app.TransportId, nil
 		}
 	}
-	return "", fmt.Errorf("no app with namespace '%s' could not be found in status", namespace)
+	return "", fmt.Errorf("no app with namespace '%s' could be found in status", namespace)
 }
