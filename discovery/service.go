@@ -16,7 +16,7 @@ type Scanner interface {
 
 // Service allows to discover chromecast via multiple means
 type Service struct {
-	Scanner chromecast.Scanner
+	Scanner Scanner
 }
 
 // First returns the first chromecast that is discovered by the scanner

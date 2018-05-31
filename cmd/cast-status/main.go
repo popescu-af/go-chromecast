@@ -12,12 +12,16 @@ import (
 	"github.com/oliverpool/go-chromecast/cli"
 	"github.com/oliverpool/go-chromecast/command/media"
 	"github.com/oliverpool/go-chromecast/command/receiver"
+	"github.com/oliverpool/go-chromecast/discovery"
+	"github.com/oliverpool/go-chromecast/discovery/zeroconf"
 )
 
 var logger = kitlog.NewNopLogger()
 
 func init() {
-	logger = cli.NewLogger(os.Stdout)
+	if os.Getenv("DEBUG") != "" {
+		logger = cli.NewLogger(os.Stdout)
+	}
 	log.SetOutput(kitlog.NewStdlibAdapter(logger))
 }
 
@@ -32,13 +36,21 @@ func secondsToDuration(s float64) time.Duration {
 }
 
 func main() {
-
 	ctx := context.Background()
 
-	fmt.Print("Searching device...")
-	client, err := cli.GetClient(ctx, "", 0, "", logger)
+	// Find device
+	fmt.Print("Searching device... ")
+	chr, err := discovery.Service{Scanner: zeroconf.Scanner{Logger: logger}}.First(ctx)
 	if err != nil {
-		fatalf("could not get a client: %v", err)
+		fatalf("could not discover a device: %v", err)
+	}
+	fmt.Println(chr.Addr() + " OK")
+
+	// Connect client
+	fmt.Print("Connecting client... ")
+	client, err := cli.ConnectedClient(ctx, chr.Addr(), logger)
+	if err != nil {
+		fatalf("could not connect to client: %v", err)
 	}
 	fmt.Println(" OK")
 
@@ -46,6 +58,7 @@ func main() {
 		Requester: client,
 	}
 
+	// Get receiver status
 	fmt.Print("\nGetting receiver status...")
 	status, err := launcher.Status()
 	if err != nil {
@@ -54,36 +67,31 @@ func main() {
 	fmt.Println(" OK")
 	cli.FprintStatus(os.Stdout, status)
 
-	// Get Media app
+	// Get media app
 	fmt.Print("\nLooking for a media app...")
 	app, err := media.FromStatus(client, status)
-	if err == nil {
-		fmt.Println(" OK")
-		go app.UpdateStatus()
-		st, err := app.Status()
-		if err != nil {
-			fatalf("could not get media status: %v", err)
+	if err != nil {
+		fatalf(" nothing found: %v", err)
+	}
+	fmt.Println(" OK")
+
+	// Get media app status
+	fmt.Print("Getting media app status...")
+	st, err := app.Status()
+	if err != nil {
+		fatalf("could not get media status: %v", err)
+	}
+	fmt.Println(" OK")
+	for _, s := range st {
+		if s.Item != nil {
+			fmt.Printf("  Item: %s\n", s.Item.ContentId)
+			fmt.Printf("  Type: %s\n", s.Item.ContentType)
+			fmt.Printf("  Stream: %s\n", s.Item.StreamType)
+			fmt.Printf("  Duration: %s\n", secondsToDuration(s.Item.Duration))
+			fmt.Printf("  Metadata: %#v\n", s.Item.Metadata)
 		}
-		for _, s := range st {
-			if s.Item != nil {
-				fmt.Printf("  Item: %s\n", s.Item.ContentId)
-				fmt.Printf("  Duration: %s\n", secondsToDuration(s.Item.Duration))
-			}
-			fmt.Printf("  Current Time: %s\n", secondsToDuration(s.CurrentTime))
-			fmt.Printf("  State: %s\n", s.PlayerState)
-		}
-		session, err := app.CurrentSession()
-		if err != nil {
-			fatalf("could not get a session")
-		}
-		if true {
-			ch, err := session.Seek(media.Seek(15 * time.Second))
-			if err != nil {
-				fatalf("could not pause")
-			}
-			fmt.Println(string(<-ch))
-		}
-	} else {
-		fmt.Println(" not found")
+		fmt.Printf("  Current Time: %s\n", secondsToDuration(s.CurrentTime))
+		fmt.Printf("  State: %s\n", s.PlayerState)
+		fmt.Printf("  Rate: %.2f\n", s.PlaybackRate)
 	}
 }
