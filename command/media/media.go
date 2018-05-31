@@ -63,10 +63,11 @@ type statusResponse struct {
 }
 
 type ItemStatus struct {
-	ContentId   string  `json:"contentId"`
-	StreamType  string  `json:"streamType"`
-	ContentType string  `json:"contentType"`
-	Duration    float64 `json:"duration"`
+	ContentId   string            `json:"contentId"`
+	StreamType  string            `json:"streamType"`
+	ContentType string            `json:"contentType"`
+	Duration    float64           `json:"duration"`
+	Metadata    map[string]string `json:"metadata"`
 }
 
 // FOR DEBUG ONLY!

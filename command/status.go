@@ -6,6 +6,8 @@ import (
 	chromecast "github.com/oliverpool/go-chromecast"
 )
 
+var ErrAppNotFound = fmt.Errorf("app not found in status")
+
 func TransportForNamespace(st chromecast.Status, namespace string) (transport string, err error) {
 	for _, app := range st.Applications {
 		if app == nil || app.TransportId == nil {
@@ -18,5 +20,5 @@ func TransportForNamespace(st chromecast.Status, namespace string) (transport st
 			return *app.TransportId, nil
 		}
 	}
-	return "", fmt.Errorf("no app with namespace '%s' could be found in status", namespace)
+	return "", ErrAppNotFound
 }
