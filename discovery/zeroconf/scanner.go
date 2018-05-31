@@ -7,10 +7,12 @@ import (
 
 	"github.com/grandcat/zeroconf"
 	chromecast "github.com/oliverpool/go-chromecast"
+	"github.com/oliverpool/go-chromecast/discovery"
 
 	"context"
 )
 
+// Scanner backed by the grandcat/zeroconf package
 type Scanner struct {
 	Logger chromecast.Logger
 	// nil value should be good enough
@@ -52,23 +54,11 @@ func (s Scanner) Scan(ctx context.Context, results chan<- *chromecast.Device) er
 	return ctx.Err()
 }
 
-func (s Scanner) log(keyvals ...interface{}) {
-	if s.Logger == nil {
-		return
-	}
-	vals := make([]interface{}, 0, len(keyvals)+2)
-	vals = append(vals, "package", "zeroconf")
-	vals = append(vals, keyvals...)
-	s.Logger.Log(vals...)
-}
-
 // decode turns an zeroconf.ServiceEntry into a chromecast.Device
 func (s Scanner) decode(entry *zeroconf.ServiceEntry) (*chromecast.Device, error) {
 	if !strings.Contains(entry.Service, "_googlecast.") {
 		return nil, fmt.Errorf("fdqn '%s does not contain '_googlecast.'", entry.Service)
 	}
-
-	info := parseProperties(entry.Text)
 
 	var ip net.IP
 	if len(entry.AddrIPv6) > 0 {
@@ -77,22 +67,15 @@ func (s Scanner) decode(entry *zeroconf.ServiceEntry) (*chromecast.Device, error
 		ip = entry.AddrIPv4[0]
 	}
 
-	return &chromecast.Device{
-		IP:         ip,
-		Port:       entry.Port,
-		Properties: info,
-	}, nil
+	return discovery.NewDevice(ip, entry.Port, entry.Text), nil
 }
 
-// parseProperties into a string map
-// Input: key1=value1|key2=value2
-func parseProperties(s []string) map[string]string {
-	m := make(map[string]string, len(s))
-	for _, v := range s {
-		s := strings.SplitN(v, "=", 2)
-		if len(s) == 2 {
-			m[s[0]] = s[1]
-		}
+func (s Scanner) log(keyvals ...interface{}) {
+	if s.Logger == nil {
+		return
 	}
-	return m
+	vals := make([]interface{}, 0, len(keyvals)+2)
+	vals = append(vals, "package", "zeroconf")
+	vals = append(vals, keyvals...)
+	s.Logger.Log(vals...)
 }
