@@ -109,27 +109,6 @@ func remote(ctx context.Context, logger chromecast.Logger) int {
 
 	go app.UpdateStatus()
 
-	/*
-		fmt.Print("Waiting for a loaded item...")
-		appStatus, err := app.Status()
-		for err != nil || len(appStatus) == 0 || appStatus[0].Item == nil || appStatus[0].Item.Duration == 0 {
-			if ctx.Err() != nil {
-				return fatalf("no item could be found: %v", err)
-			}
-			time.Sleep(time.Second)
-			fmt.Print(".")
-			appStatus, err = app.Status()
-		}
-		fmt.Println(" OK")
-
-		fmt.Print("Getting a session...")
-		session, err := app.CurrentSession()
-		if err != nil {
-			return fatalf("could not get a session: %v", err)
-		}
-		fmt.Println(" OK")
-	*/
-
 	kill := make(chan struct{})
 	ch := make(chan cli.KeyPress, 10)
 
