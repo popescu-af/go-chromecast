@@ -65,7 +65,7 @@ func main() {
 		fatalf("could not get status: %v", err)
 	}
 	fmt.Println(" OK")
-	cli.FprintStatus(os.Stdout, status)
+	fmt.Println(status.String())
 
 	// Get media app
 	fmt.Print("\nLooking for a media app...")
