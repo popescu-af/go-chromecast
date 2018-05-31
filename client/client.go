@@ -16,24 +16,22 @@ func New(serializer chromecast.Serializer, logger chromecast.Logger) *Client {
 	}
 
 	go func() {
-		var lastErr error
+		var lastErr string
 		nbErr := 0
-		for {
-			err := c.Dispatch()
-			if err != nil {
+		for nbErr <= 5 {
+			if err := c.Dispatch(); err != nil {
 				logger.Log("step", "dispatch", "err", err)
-				if lastErr == nil || err.Error() == lastErr.Error() {
+				if err.Error() == lastErr {
 					nbErr++
-					if nbErr > 5 {
-						logger.Log("step", "dispatch-abort", "err", fmt.Errorf("same error %d times: %v", nbErr, err))
-						return
-					}
 				} else {
-					lastErr = err
+					lastErr = err.Error()
 					nbErr = 1
 				}
+			} else {
+				nbErr = 0
 			}
 		}
+		logger.Log("step", "dispatch-abort", "err", fmt.Errorf("same error %d times: %s", nbErr, lastErr))
 	}()
 
 	return &c
