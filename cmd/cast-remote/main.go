@@ -3,27 +3,22 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
+	"sync"
+	"sync/atomic"
 	"time"
 
+	"github.com/oliverpool/go-chromecast"
+
 	"github.com/oliverpool/go-chromecast/cli/local"
-	"github.com/oliverpool/go-chromecast/command/receiver"
+	"github.com/oliverpool/go-chromecast/command"
 
 	"github.com/gosuri/uiprogress"
 
-	kitlog "github.com/go-kit/kit/log"
-
 	"github.com/oliverpool/go-chromecast/cli"
 	"github.com/oliverpool/go-chromecast/command/media"
+	"github.com/oliverpool/go-chromecast/command/receiver"
 )
-
-var logger = kitlog.NewNopLogger()
-
-func init() {
-	// logger = cli.NewLogger(os.Stdout)
-	log.SetOutput(kitlog.NewStdlibAdapter(logger))
-}
 
 func fatalf(format string, a ...interface{}) int {
 	fmt.Printf(format, a...)
@@ -32,7 +27,16 @@ func fatalf(format string, a ...interface{}) int {
 }
 
 func main() {
-	os.Exit(remote())
+	ctx := context.Background()
+	logger := cli.NewLogger(os.Stdout)
+
+	var cancel context.CancelFunc
+	if timeout, err := time.ParseDuration(os.Getenv("TIMEOUT")); err == nil {
+		ctx, cancel = context.WithTimeout(ctx, timeout)
+		logger.Log("timeout", timeout)
+		defer cancel()
+	}
+	os.Exit(remote(ctx, logger))
 }
 
 func newStreakFactor() func() int64 {
@@ -57,56 +61,74 @@ func newStreakFactor() func() int64 {
 	}
 }
 
-func remote() int {
-	ctx := context.Background()
+func remote(ctx context.Context, logger chromecast.Logger) int {
+	clientCtx := context.Background()
+	clientCtx, clientCancel := context.WithCancel(clientCtx)
 
-	fmt.Print("Searching device...")
-	client, err := cli.GetClient(ctx, "", 0, "", logger)
+	ctx, initCancel := context.WithCancel(ctx)
+	cancel := func() {
+		clientCancel()
+		initCancel()
+	}
+	defer cancel()
+
+	client, status, err := cli.FirstClientWithStatus(ctx, logger)
 	if err != nil {
-		return fatalf("could not get a client: %v", err)
+		fatalf(err.Error())
 	}
-	fmt.Println(" OK")
-
-	launcher := receiver.Launcher{
-		Requester: client,
-	}
-
-	fmt.Print("\nGetting receiver status...")
-	status, err := launcher.Status()
-	if err != nil {
-		return fatalf("could not get status: %v", err)
-	}
-	fmt.Println(" OK")
-	cli.FprintStatus(os.Stdout, status)
+	launcher := receiver.Launcher{Requester: client}
 
 	// Get Media app
-	fmt.Print("\nLooking for a media app...")
-	app, err := media.FromStatus(client, status)
-	if err != nil {
-		return fatalf(" not found: %v", err)
+	fmt.Print("\nWaiting for a media app...")
+	var app *media.App
+	for {
+		app, err = media.FromStatus(client, status)
+		if err == nil {
+			fmt.Println(" OK")
+			break
+		}
+		if ctx.Err() != nil {
+			return fatalf("%v", ctx.Err())
+		}
+		if err == command.ErrAppNotFound {
+			select {
+			case <-ctx.Done():
+				return fatalf("interrupted: %v", ctx.Err())
+			case <-time.After(time.Second):
+			}
+			fmt.Print(".")
+			status, err = launcher.Status()
+			if err != nil {
+				return fatalf("could not get status: %v", err)
+			}
+			continue
+		} else if err != nil {
+			return fatalf(" failed: %v", err)
+		}
 	}
-	fmt.Println(" OK")
 
 	go app.UpdateStatus()
 
-	fmt.Print("Looking for a playing item...")
-	appStatus, err := app.Status()
-	for err != nil || len(appStatus) == 0 || appStatus[0].Item == nil || appStatus[0].Item.Duration == 0 {
-		if ctx.Err() != nil {
-			return fatalf("could not get media status: %v", err)
+	/*
+		fmt.Print("Waiting for a loaded item...")
+		appStatus, err := app.Status()
+		for err != nil || len(appStatus) == 0 || appStatus[0].Item == nil || appStatus[0].Item.Duration == 0 {
+			if ctx.Err() != nil {
+				return fatalf("no item could be found: %v", err)
+			}
+			time.Sleep(time.Second)
+			fmt.Print(".")
+			appStatus, err = app.Status()
 		}
-		appStatus, err = app.Status()
-	}
-	fmt.Println(" OK")
+		fmt.Println(" OK")
 
-	fmt.Print("Getting a session...")
-	session, err := app.CurrentSession()
-	if err != nil {
-		return fatalf("could not get a session: %v", err)
-	}
-	fmt.Println(" OK")
-
-	fmt.Println("\n Play/Pause: <space>  Seek: ←/→  Volume: ↑/↓/m  Stop: s  Quit: q  Disconnect: <Esc>")
+		fmt.Print("Getting a session...")
+		session, err := app.CurrentSession()
+		if err != nil {
+			return fatalf("could not get a session: %v", err)
+		}
+		fmt.Println(" OK")
+	*/
 
 	kill := make(chan struct{})
 	ch := make(chan cli.KeyPress, 10)
@@ -114,14 +136,121 @@ func remote() int {
 	defer cli.ReadStdinKeys(ch, kill)()
 	defer close(kill)
 
+	lstatus := local.New(status)
+	// lstatus.UpdateMedia(app.LatestStatus()[0])
+
+	forwardFactor := newStreakFactor()
+	backwardFactor := newStreakFactor()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	var sessionFound uint32
+	hasSession := func() bool {
+		return atomic.LoadUint32(&sessionFound) == 1
+	}
+
+	var session *media.Session
+
+	go func() {
+		defer cancel()
+		defer wg.Done()
+
+		for c := range ch {
+			switch {
+			case c.Type == cli.Escape:
+				if hasSession() {
+					uiprogress.Stop()
+					fmt.Println("bye")
+				}
+				return
+			case c.Type == cli.SpaceBar && hasSession():
+				if lstatus.TogglePlay() {
+					session.Play()
+				} else {
+					session.Pause()
+				}
+			case c.Type == cli.LowerCaseLetter:
+				switch c.Key {
+				case 's':
+					if !hasSession() {
+						continue
+					}
+					uiprogress.Stop()
+					fmt.Println("stop")
+					ch, _ := session.Stop()
+					<-ch
+					return
+				case 'q':
+					if hasSession() {
+						uiprogress.Stop()
+					}
+					fmt.Println("quit")
+					launcher.Stop()
+					return
+				case 'm':
+					launcher.Mute(lstatus.ToggleMute())
+				default:
+					logger.Log("msg", "unsupported lowercase", "key", string(c.Key), "type", c.Type)
+				}
+			case c.Type == cli.Arrow:
+				switch c.Key {
+				case cli.Up:
+					launcher.SetVolume(lstatus.IncrVolume(.1))
+				case cli.Down:
+					launcher.SetVolume(lstatus.IncrVolume(-.1))
+				case cli.Left:
+					if !hasSession() {
+						continue
+					}
+					diff := -time.Duration(backwardFactor()) * 5 * time.Second
+					session.Seek(media.Seek(lstatus.SeekBy(diff)))
+				case cli.Right:
+					if !hasSession() {
+						continue
+					}
+					diff := time.Duration(forwardFactor()) * 10 * time.Second
+					session.Seek(media.Seek(lstatus.SeekBy(diff)))
+				default:
+					logger.Log("msg", "unsupported arrow", "key", c.Key, "type", c.Type)
+				}
+			default:
+				logger.Log("msg", "unsupported key", "key", c.Key, "type", c.Type)
+			}
+		}
+	}()
+
+	// Get loaded item
+	fmt.Print("Waiting for a loaded item...")
+	appStatus := app.LatestStatus()
+	for len(appStatus) == 0 || appStatus[0].Item == nil || appStatus[0].Item.Duration == 0 {
+		select {
+		case <-ctx.Done():
+			return fatalf("interrupted: %v", ctx.Err())
+		case <-time.After(time.Second):
+		}
+		fmt.Print(".")
+		appStatus, err = app.Status()
+		if err != nil {
+			return fatalf("status could not be fetch: %v", err)
+		}
+	}
+	fmt.Println(" OK")
+
+	fmt.Print("Getting a session...")
+	session, err = app.CurrentSession()
+	if err != nil {
+		return fatalf("could not get a session: %v", err)
+	}
+	fmt.Println(" OK")
+
+	fmt.Println("\n Play/Pause: <space>  Seek: ←/→  Volume: ↑/↓/m  Stop: s  Quit: q  Disconnect: <Esc>")
+
 	total := int(appStatus[0].Item.Duration)
 
 	bar := uiprogress.AddBar(total)
 	bar.Width = 40
 	uiprogress.Start()
-
-	lstatus := local.New(status)
-	lstatus.UpdateMedia(app.LatestStatus()[0])
 
 	bar.PrependFunc(func(b *uiprogress.Bar) string {
 		return lstatus.PlayerState()
@@ -130,8 +259,7 @@ func remote() int {
 		return lstatus.TimeStatus()
 	})
 
-	forwardFactor := newStreakFactor()
-	backwardFactor := newStreakFactor()
+	atomic.StoreUint32(&sessionFound, 1)
 
 	go func() {
 		for {
@@ -142,53 +270,7 @@ func remote() int {
 		}
 	}()
 
-	for c := range ch {
-		switch {
-		case c.Type == cli.Escape:
-			uiprogress.Stop()
-			fmt.Println("bye")
-			return 0
-		case c.Type == cli.SpaceBar:
-			if lstatus.TogglePlay() {
-				session.Play()
-			} else {
-				session.Pause()
-			}
-		case c.Type == cli.LowerCaseLetter:
-			switch c.Key {
-			case 's':
-				uiprogress.Stop()
-				fmt.Println("stop")
-				ch, _ := session.Stop()
-				<-ch
-				return 0
-			case 'q':
-				uiprogress.Stop()
-				fmt.Println("quit")
-				launcher.Stop()
-				return 0
-			case 'm':
-				launcher.Mute(lstatus.ToggleMute())
-				// default:
-				// 	fmt.Println("key: " + string(c.Key))
-			}
-		case c.Type == cli.Arrow:
-			switch c.Key {
-			case cli.Up:
-				launcher.SetVolume(lstatus.IncrVolume(.1))
-			case cli.Down:
-				launcher.SetVolume(lstatus.IncrVolume(-.1))
-			case cli.Left:
-				diff := -time.Duration(backwardFactor()) * 5 * time.Second
-				session.Seek(media.Seek(lstatus.SeekBy(diff)))
-			case cli.Right:
-				diff := time.Duration(forwardFactor()) * 10 * time.Second
-				session.Seek(media.Seek(lstatus.SeekBy(diff)))
-			}
-			// default:
-			// 	fmt.Println(c)
-		}
-	}
+	wg.Wait()
 
 	return 0
 }
