@@ -21,37 +21,38 @@ type Scanner struct {
 
 // Scan repeatedly scans the network  and synchronously sends the chromecast found into the results channel.
 // It finishes when the context is done.
-func (s Scanner) Scan(ctx context.Context, results chan<- *chromecast.Device) error {
-	defer close(results)
-
+func (s Scanner) Scan(ctx context.Context, results chan<- *chromecast.Device) (func() error, error) {
 	// generate entries
 	// Discover all services on the network (e.g. _workstation._tcp)
 	resolver, err := zeroconf.NewResolver(s.ClientOptions...)
 	if err != nil {
-		return fmt.Errorf("failed to initialize resolver: %v", err)
+		return nil, fmt.Errorf("failed to initialize resolver: %v", err)
 	}
 
 	entries := make(chan *zeroconf.ServiceEntry, 5)
 	err = resolver.Browse(ctx, "_googlecast._tcp", "local", entries)
 	if err != nil {
-		return fmt.Errorf("fail to browse services: %v", err)
+		return nil, fmt.Errorf("fail to browse services: %v", err)
 	}
 
-	// decode entries
-	for e := range entries {
-		c, err := s.decode(e)
-		if err != nil {
-			s.log("step", "decode", "err", err)
-			continue
+	return func() error {
+		defer close(results)
+		// decode entries
+		for e := range entries {
+			c, err := s.decode(e)
+			if err != nil {
+				s.log("step", "decode", "err", err)
+				continue
+			}
+			select {
+			case results <- c:
+				continue
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
-		select {
-		case results <- c:
-			continue
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-	}
-	return ctx.Err()
+		return ctx.Err()
+	}, nil
 }
 
 // decode turns an zeroconf.ServiceEntry into a chromecast.Device

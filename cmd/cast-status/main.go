@@ -41,7 +41,7 @@ func main() {
 	// Find device
 	fmt.Print("Searching device... ")
 	chr, err := discovery.Service{Scanner: zeroconf.Scanner{Logger: logger}}.First(ctx)
-	if err != nil {
+	if err != nil || chr == nil {
 		fatalf("could not discover a device: %v", err)
 	}
 	fmt.Println(chr.Addr() + " OK")
@@ -54,9 +54,7 @@ func main() {
 	}
 	fmt.Println(" OK")
 
-	launcher := receiver.Launcher{
-		Requester: client,
-	}
+	launcher := receiver.Launcher{Requester: client}
 
 	// Get receiver status
 	fmt.Print("\nGetting receiver status...")

@@ -14,10 +14,12 @@ import (
 
 func TestFirstDirect(t *testing.T) {
 	scan := mock.Scanner{
-		ScanFunc: func(ctx context.Context, results chan<- *chromecast.Device) error {
-			results <- &chromecast.Device{}
-			close(results)
-			return nil
+		ScanFunc: func(ctx context.Context, results chan<- *chromecast.Device) (func() error, error) {
+			return func() error {
+				results <- &chromecast.Device{}
+				close(results)
+				return nil
+			}, nil
 		},
 	}
 
@@ -39,9 +41,11 @@ func TestFirstDirect(t *testing.T) {
 
 func TestFirstCancelled(t *testing.T) {
 	scan := mock.Scanner{
-		ScanFunc: func(ctx context.Context, results chan<- *chromecast.Device) error {
-			<-ctx.Done()
-			return nil
+		ScanFunc: func(ctx context.Context, results chan<- *chromecast.Device) (func() error, error) {
+			return func() error {
+				<-ctx.Done()
+				return nil
+			}, nil
 		},
 	}
 
@@ -66,23 +70,25 @@ func TestFirstCancelled(t *testing.T) {
 func TestNamedDirect(t *testing.T) {
 	scan := mock.Scanner{}
 	done := make(chan struct{})
-	scan.ScanFunc = func(ctx context.Context, results chan<- *chromecast.Device) error {
-		defer close(results)
-		results <- &chromecast.Device{}
-		c := &chromecast.Device{
-			Properties: map[string]string{
-				"fn": "casti",
-			},
-		}
-		results <- c
-		results <- &chromecast.Device{}
-		select {
-		case results <- &chromecast.Device{}:
-			t.Error("channel should have been full")
-		case <-ctx.Done():
-		}
-		close(done)
-		return nil
+	scan.ScanFunc = func(ctx context.Context, results chan<- *chromecast.Device) (func() error, error) {
+		return func() error {
+			defer close(results)
+			results <- &chromecast.Device{}
+			c := &chromecast.Device{
+				Properties: map[string]string{
+					"fn": "casti",
+				},
+			}
+			results <- c
+			results <- &chromecast.Device{}
+			select {
+			case results <- &chromecast.Device{}:
+				t.Error("channel should have been full")
+			case <-ctx.Done():
+			}
+			close(done)
+			return nil
+		}, nil
 	}
 
 	service := discovery.Service{Scanner: &scan}
@@ -108,16 +114,18 @@ func TestNamedDirect(t *testing.T) {
 func TestNamedCancelled(t *testing.T) {
 	scan := mock.Scanner{}
 	done := make(chan struct{})
-	scan.ScanFunc = func(ctx context.Context, results chan<- *chromecast.Device) error {
-		defer close(results)
-		for {
-			select {
-			case results <- &chromecast.Device{}:
-			case <-ctx.Done():
-				close(done)
-				return nil
+	scan.ScanFunc = func(ctx context.Context, results chan<- *chromecast.Device) (func() error, error) {
+		return func() error {
+			defer close(results)
+			for {
+				select {
+				case results <- &chromecast.Device{}:
+				case <-ctx.Done():
+					close(done)
+					return nil
+				}
 			}
-		}
+		}, nil
 	}
 
 	service := discovery.Service{Scanner: &scan}

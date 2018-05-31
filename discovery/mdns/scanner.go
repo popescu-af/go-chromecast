@@ -21,40 +21,42 @@ type Scanner struct {
 
 // Scan repeatedly scans the network  and synchronously sends the chromecast found into the results channel.
 // It finishes when the context is done.
-func (s Scanner) Scan(ctx context.Context, results chan<- *chromecast.Device) error {
-	defer close(results)
+func (s Scanner) Scan(ctx context.Context, results chan<- *chromecast.Device) (func() error, error) {
+	return func() error {
+		defer close(results)
 
-	// generate entries
-	entries := make(chan *mdns.ServiceEntry, 10)
-	go func() {
-		defer close(entries)
-		for {
-			if ctx.Err() != nil {
-				return
+		// generate entries
+		entries := make(chan *mdns.ServiceEntry, 10)
+		go func() {
+			defer close(entries)
+			for {
+				if ctx.Err() != nil {
+					return
+				}
+				mdns.Query(&mdns.QueryParam{
+					Service: "_googlecast._tcp",
+					Domain:  "local",
+					Timeout: s.Timeout,
+					Entries: entries,
+				})
 			}
-			mdns.Query(&mdns.QueryParam{
-				Service: "_googlecast._tcp",
-				Domain:  "local",
-				Timeout: s.Timeout,
-				Entries: entries,
-			})
-		}
-	}()
+		}()
 
-	// decode entries
-	for e := range entries {
-		c, err := s.decode(e)
-		if err != nil {
-			continue
+		// decode entries
+		for e := range entries {
+			c, err := s.decode(e)
+			if err != nil {
+				continue
+			}
+			select {
+			case results <- c:
+				continue
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
-		select {
-		case results <- c:
-			continue
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-	}
-	return ctx.Err()
+		return ctx.Err()
+	}, nil
 }
 
 // decode turns an mdns.ServiceEntry into a chromecast.Device

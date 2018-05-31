@@ -2,6 +2,7 @@ package discovery
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"strings"
 
@@ -9,9 +10,9 @@ import (
 )
 
 // Scanner scans for chromecast and pushes them onto the results channel (eventually multiple times)
-// It must close the results channel before returning when the ctx is done
+// It must close the results channel in the returned function (which should return when the ctx is done)
 type Scanner interface {
-	Scan(ctx context.Context, results chan<- *chromecast.Device) error
+	Scan(ctx context.Context, results chan<- *chromecast.Device) (func() error, error)
 }
 
 // Service allows to discover chromecast via multiple means
@@ -26,7 +27,12 @@ func (s Service) First(ctx context.Context) (*chromecast.Device, error) {
 
 	result := make(chan *chromecast.Device, 1)
 
-	go s.Scanner.Scan(ctx, result)
+	worker, err := s.Scanner.Scan(ctx, result)
+	if err != nil {
+		return nil, fmt.Errorf("could not initiliaze scanner: %v", err)
+	}
+	go worker()
+
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -42,7 +48,11 @@ func (s Service) Named(ctx context.Context, name string) (*chromecast.Device, er
 
 	result := make(chan *chromecast.Device, 1)
 
-	go s.Scanner.Scan(ctx, result)
+	worker, err := s.Scanner.Scan(ctx, result)
+	if err != nil {
+		return nil, fmt.Errorf("could not initiliaze scanner: %v", err)
+	}
+	go worker()
 	for {
 		select {
 		case <-ctx.Done():
