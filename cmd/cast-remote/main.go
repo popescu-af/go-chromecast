@@ -202,7 +202,7 @@ func remote(ctx context.Context, logger chromecast.Logger) int {
 	// Get loaded item
 	fmt.Print("Waiting for a loaded item...")
 	appStatus := app.LatestStatus()
-	for len(appStatus) == 0 || appStatus[0].Item == nil || appStatus[0].Item.Duration == 0 {
+	for len(appStatus) == 0 || appStatus[0].Item == nil || appStatus[0].Item.Duration.Seconds() == 0 {
 		select {
 		case <-ctx.Done():
 			return fatalf("interrupted: %v", ctx.Err())
@@ -225,7 +225,7 @@ func remote(ctx context.Context, logger chromecast.Logger) int {
 
 	fmt.Println("\n Play/Pause: <space>  Seek: ←/→  Volume: ↑/↓/m  Stop: s  Quit: q  Disconnect: <Esc>")
 
-	total := int(appStatus[0].Item.Duration)
+	total := int(appStatus[0].Item.Duration.Seconds())
 
 	bar := uiprogress.AddBar(total)
 	bar.Width = 40
@@ -243,8 +243,10 @@ func remote(ctx context.Context, logger chromecast.Logger) int {
 	go func() {
 		for {
 			app.Status()
-			elapsed := lstatus.UpdateMedia(app.LatestStatus()[0])
-			bar.Set(elapsed)
+			if len(app.LatestStatus()) > 0 {
+				elapsed := lstatus.UpdateMedia(app.LatestStatus()[0])
+				bar.Set(elapsed)
+			}
 			time.Sleep(1000 * time.Millisecond)
 		}
 	}()

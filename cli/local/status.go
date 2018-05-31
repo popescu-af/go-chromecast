@@ -41,11 +41,11 @@ func (s *Status) UpdateMedia(mstatus media.Status) int {
 		return int(s.time.Seconds())
 	}
 	s.playerState = mstatus.PlayerState
-	s.time = time.Duration(mstatus.CurrentTime * float64(time.Second))
+	s.time = mstatus.CurrentTime.Duration
 	if mstatus.Item != nil {
-		s.totalTime = time.Duration(mstatus.Item.Duration * float64(time.Second))
+		s.totalTime = mstatus.Item.Duration.Duration
 	}
-	return int(mstatus.CurrentTime)
+	return int(mstatus.CurrentTime.Seconds())
 }
 
 func (s *Status) order() func() {

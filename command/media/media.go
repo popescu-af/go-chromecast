@@ -49,7 +49,7 @@ type Status struct {
 	SessionID              int                    `json:"mediaSessionId"`
 	PlaybackRate           float64                `json:"playbackRate"`
 	PlayerState            string                 `json:"playerState"`
-	CurrentTime            float64                `json:"currentTime"`
+	CurrentTime            Seconds                `json:"currentTime"`
 	SupportedMediaCommands int                    `json:"supportedMediaCommands"`
 	Volume                 *chromecast.Volume     `json:"volume,omitempty"`
 	Item                   *ItemStatus            `json:"media"`
@@ -66,8 +66,23 @@ type ItemStatus struct {
 	ContentId   string            `json:"contentId"`
 	StreamType  string            `json:"streamType"`
 	ContentType string            `json:"contentType"`
-	Duration    float64           `json:"duration"`
+	Duration    Seconds           `json:"duration"`
 	Metadata    map[string]string `json:"metadata"`
+}
+
+type Seconds struct {
+	time.Duration
+}
+
+func (s *Seconds) UnmarshalJSON(b []byte) (err error) {
+	var seconds float64
+	err = json.Unmarshal(b, &seconds)
+	s.Duration = time.Duration(seconds * float64(time.Second))
+	return err
+}
+
+func (s Seconds) MarshalJSON() (b []byte, err error) {
+	return json.Marshal(s.Duration.Seconds())
 }
 
 // FOR DEBUG ONLY!

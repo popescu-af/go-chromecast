@@ -50,10 +50,10 @@ func main() {
 			fmt.Printf("  Item: %s\n", s.Item.ContentId)
 			fmt.Printf("  Type: %s\n", s.Item.ContentType)
 			fmt.Printf("  Stream: %s\n", s.Item.StreamType)
-			fmt.Printf("  Duration: %s\n", secondsToDuration(s.Item.Duration))
+			fmt.Printf("  Duration: %s\n", s.Item.Duration)
 			fmt.Printf("  Metadata: %#v\n", s.Item.Metadata)
 		}
-		fmt.Printf("  Current Time: %s\n", secondsToDuration(s.CurrentTime))
+		fmt.Printf("  Current Time: %s\n", s.CurrentTime)
 		fmt.Printf("  State: %s\n", s.PlayerState)
 		fmt.Printf("  Rate: %.2f\n", s.PlaybackRate)
 	}
