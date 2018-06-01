@@ -109,7 +109,7 @@ func (c *Client) Dispatch() error {
 	}
 
 	if payID.RequestID != nil {
-		c.sendResponse(*payID.RequestID, pay)
+		c.forwardResponse(*payID.RequestID, pay)
 	}
 
 	c.mu.Lock()
@@ -141,7 +141,7 @@ func (c *Client) Dispatch() error {
 	return nil
 }
 
-func (c *Client) sendResponse(id uint32, pay []byte) {
+func (c *Client) forwardResponse(id uint32, pay []byte) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if requester, ok := c.pending[id]; ok {
