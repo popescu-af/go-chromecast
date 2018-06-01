@@ -11,7 +11,6 @@ import (
 	"github.com/oliverpool/go-chromecast"
 
 	"github.com/oliverpool/go-chromecast/cli/local"
-	"github.com/oliverpool/go-chromecast/command"
 
 	"github.com/gosuri/uiprogress"
 
@@ -82,7 +81,7 @@ func remote(ctx context.Context, logger chromecast.Logger) int {
 	fmt.Print("\nWaiting for a media app...")
 	var app *media.App
 	for {
-		app, err = media.FromStatus(client, status)
+		app, err = media.ConnectFromStatus(client, status)
 		if err == nil {
 			fmt.Println(" OK")
 			break
@@ -90,7 +89,7 @@ func remote(ctx context.Context, logger chromecast.Logger) int {
 		if ctx.Err() != nil {
 			return fatalf("%v", ctx.Err())
 		}
-		if err == command.ErrAppNotFound {
+		if err == chromecast.ErrAppNotFound {
 			select {
 			case <-ctx.Done():
 				return fatalf("interrupted: %v", ctx.Err())

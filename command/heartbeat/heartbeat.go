@@ -16,6 +16,6 @@ func RespondToPing(client chromecast.Client) {
 	client.Listen(pingEnvelope, "PING", ch)
 
 	for range ch {
-		client.Send(pingEnvelope, command.Map{"type": "PONG"})
+		client.Send(pingEnvelope, command.Type("PONG"))
 	}
 }

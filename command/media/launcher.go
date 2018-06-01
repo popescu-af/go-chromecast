@@ -1,4 +1,4 @@
-package receiver
+package media
 
 import (
 	"encoding/json"
@@ -8,19 +8,17 @@ import (
 	"github.com/oliverpool/go-chromecast/command"
 )
 
-const Namespace = "urn:x-cast:com.google.cast.receiver"
-
-var env = chromecast.Envelope{
-	Source:      command.DefaultSource,
-	Destination: command.DefaultDestination,
-	Namespace:   Namespace,
-}
-
 type Launcher struct {
 	Requester chromecast.Requester
 }
 
 func (l Launcher) statusRequest(pay chromecast.IdentifiablePayload) (st chromecast.Status, err error) {
+	env := chromecast.Envelope{
+		Source:      command.DefaultSource,
+		Destination: command.DefaultDestination,
+		Namespace:   "urn:x-cast:com.google.cast.receiver",
+	}
+
 	response, err := l.Requester.Request(env, pay)
 	if err != nil {
 		return st, err
@@ -50,7 +48,14 @@ func (l Launcher) Status() (st chromecast.Status, err error) {
 	return l.statusRequest(pay)
 }
 
-func (l Launcher) Launch(appID string) (st chromecast.Status, err error) {
+// Launch will launch the given app, except if it is found running in one of the optional statuses
+func (l Launcher) Launch(appID string, statuses ...chromecast.Status) (st chromecast.Status, err error) {
+	for _, st := range statuses {
+		app := st.AppWithID(appID)
+		if app != nil {
+			return st, nil
+		}
+	}
 	pay := command.Map{
 		"type":  "LAUNCH",
 		"appId": appID,

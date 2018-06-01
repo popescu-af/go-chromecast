@@ -19,27 +19,64 @@ type Status struct {
 	Volume       *Volume               `json:"volume,omitempty"`
 }
 
-func (s Status) String() string {
+func (st Status) String() string {
 	var str strings.Builder
 
-	if s.Applications != nil {
-		if len(s.Applications) == 0 {
+	if st.Applications != nil {
+		if len(st.Applications) == 0 {
 			str.WriteString("No application running\n")
 		} else {
-			str.WriteString(fmt.Sprintf("Running applications: %d\n", len(s.Applications)))
-			for _, app := range s.Applications {
+			str.WriteString(fmt.Sprintf("Running applications: %d\n", len(st.Applications)))
+			for _, app := range st.Applications {
 				str.WriteString(fmt.Sprintf(" - [%s] %s\n", *app.DisplayName, *app.StatusText))
 			}
 		}
 	}
-	if s.Volume != nil {
-		str.WriteString(fmt.Sprintf("Volume: %.2f", *s.Volume.Level))
-		if *s.Volume.Muted {
+	if st.Volume != nil {
+		str.WriteString(fmt.Sprintf("Volume: %.2f", *st.Volume.Level))
+		if *st.Volume.Muted {
 			str.WriteString(" (muted)")
 		}
 	}
 
 	return str.String()
+}
+
+func (st Status) AppSupporting(namespace string) (apps []ApplicationSession) {
+	for _, app := range st.Applications {
+		if app == nil {
+			continue
+		}
+		for _, ns := range app.Namespaces {
+			if ns == nil || ns.Name != namespace {
+				continue
+			}
+			apps = append(apps, *app)
+		}
+	}
+	return apps
+}
+
+func (st Status) AppWithID(id string) *ApplicationSession {
+	for _, app := range st.Applications {
+		if app == nil {
+			continue
+		}
+		if app.AppID != nil && *app.AppID == id {
+			return app
+		}
+	}
+	return nil
+}
+
+func (st Status) FirstDestinationSupporting(namespace string) (string, error) {
+	apps := st.AppSupporting(namespace)
+	for _, app := range apps {
+		if app.TransportId != nil {
+			return *app.TransportId, nil
+		}
+	}
+	return "", ErrAppNotFound
 }
 
 type ApplicationSession struct {

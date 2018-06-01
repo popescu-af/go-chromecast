@@ -15,10 +15,10 @@ var connectionEnv = chromecast.Envelope{
 
 var Connect = Command{
 	Envelope: connectionEnv,
-	Payload:  Map{"type": "CONNECT"},
+	Payload:  Type("CONNECT"),
 }
 
 var Close = Command{
 	Envelope: connectionEnv,
-	Payload:  Map{"type": "CLOSE"},
+	Payload:  Type("CLOSE"),
 }

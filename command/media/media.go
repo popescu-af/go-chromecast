@@ -22,21 +22,39 @@ type App struct {
 	latestStatus []Status
 }
 
-func FromStatus(client chromecast.Client, st chromecast.Status) (a *App, err error) {
-	transport, err := command.TransportForNamespace(st, Namespace)
+func LaunchAndConnect(client chromecast.Client, id string, statuses ...chromecast.Status) (*App, error) {
+	st, err := Launcher{Requester: client}.Launch(id, statuses...)
 	if err != nil {
-		return a, err
+		return nil, fmt.Errorf("could not launch app: %v", err)
 	}
-	a = &App{
+	app := st.AppWithID(id)
+	if app == nil {
+		return nil, fmt.Errorf("the launched app could not be found")
+	}
+	if app.TransportId == nil {
+		return nil, fmt.Errorf("the app has no transportId")
+	}
+	return ConnectTo(client, *app.TransportId)
+}
+
+func ConnectFromStatus(client chromecast.Client, st chromecast.Status) (*App, error) {
+	destination, err := st.FirstDestinationSupporting(Namespace)
+	if err != nil {
+		return nil, err
+	}
+	return ConnectTo(client, destination)
+}
+
+func ConnectTo(client chromecast.Client, destination string) (*App, error) {
+	a := &App{
 		Envelope: chromecast.Envelope{
 			Source:      command.DefaultSource,
-			Destination: transport,
+			Destination: destination,
 			Namespace:   Namespace,
 		},
 		Client: client,
 	}
-
-	return a, command.Connect.SendTo(client, a.Envelope.Destination)
+	return a, command.Connect.SendTo(client, destination)
 }
 
 type Item struct {
@@ -63,11 +81,11 @@ type statusResponse struct {
 }
 
 type ItemStatus struct {
-	ContentId   string            `json:"contentId"`
-	StreamType  string            `json:"streamType"`
-	ContentType string            `json:"contentType"`
-	Duration    Seconds           `json:"duration"`
-	Metadata    map[string]string `json:"metadata"`
+	ContentId   string                 `json:"contentId"`
+	StreamType  string                 `json:"streamType"`
+	ContentType string                 `json:"contentType"`
+	Duration    Seconds                `json:"duration"`
+	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 type Seconds struct {
@@ -148,7 +166,7 @@ func CustomData(data interface{}) func(command.Map) {
 	}
 }
 
-func (a *App) Load(item Item, options ...Option) (*Session, error) {
+func (a App) Load(item Item, options ...Option) (<-chan []byte, error) {
 	payload := command.Map{
 		"type":  "LOAD",
 		"media": item,
@@ -156,7 +174,11 @@ func (a *App) Load(item Item, options ...Option) (*Session, error) {
 	for _, opt := range options {
 		opt(payload)
 	}
-	response, err := a.Client.Request(a.Envelope, payload)
+	return a.Client.Request(a.Envelope, payload)
+}
+
+func (a *App) LoadAndGetSession(item Item, options ...Option) (*Session, error) {
+	response, err := a.Load(item, options...)
 	if err != nil {
 		return nil, err
 	}

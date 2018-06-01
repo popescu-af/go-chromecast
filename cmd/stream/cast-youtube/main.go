@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/oliverpool/go-chromecast/cli"
-	"github.com/oliverpool/go-chromecast/command/media"
+	"github.com/oliverpool/go-chromecast/command/media/youtube"
 )
 
 func fatalf(format string, a ...interface{}) {
@@ -26,15 +26,25 @@ func main() {
 	}
 
 	// Get media app
-	fmt.Print("\nLooking for a media app...")
-	app, err := media.ConnectFromStatus(client, status)
+	fmt.Print("\nLaunching youtube app...")
+	app, err := youtube.LaunchAndConnect(client, status)
 	if err != nil {
 		fatalf(" nothing found: %v", err)
 	}
 	fmt.Println(" OK")
 
-	// Get media app status
-	fmt.Print("Getting media app status...")
+	item := "b-GIBLX3nAk"
+	if len(os.Args) > 1 {
+		item = os.Args[1]
+	}
+	_, err = app.Load(item)
+
+	if err != nil {
+		fatalf("Could not load item '%s': %v", item, err)
+	}
+
+	// Get app status
+	fmt.Print("Getting app status...")
 	st, err := app.Status()
 	if err != nil {
 		fatalf("could not get media status: %v", err)
