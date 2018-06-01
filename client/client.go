@@ -117,28 +117,24 @@ func (c *Client) Dispatch() error {
 	if env.Destination == "*" {
 		// broadcast
 		for _, listeners := range c.listeners {
-			if typeListeners, ok := listeners[payID.Type]; ok {
-				for _, ch := range typeListeners {
-					// non blocking send
-					select {
-					case ch <- pay:
-					default:
-					}
-				}
-			}
+			nonBlockingForwardTo(listeners, payID.Type, pay)
 		}
 	} else if listeners, ok := c.listeners[env]; ok {
-		if typeListeners, ok := listeners[payID.Type]; ok {
-			for _, ch := range typeListeners {
-				// non blocking send
-				select {
-				case ch <- pay:
-				default:
-				}
+		nonBlockingForwardTo(listeners, payID.Type, pay)
+	}
+	return err
+}
+
+func nonBlockingForwardTo(listeners map[string][]chan<- []byte, key string, payload []byte) {
+	if typeListeners, ok := listeners[key]; ok {
+		for _, ch := range typeListeners {
+			// non blocking send
+			select {
+			case ch <- payload:
+			default:
 			}
 		}
 	}
-	return nil
 }
 
 func (c *Client) forwardResponse(id uint32, pay []byte) {
@@ -146,6 +142,7 @@ func (c *Client) forwardResponse(id uint32, pay []byte) {
 	defer c.mu.Unlock()
 	if requester, ok := c.pending[id]; ok {
 		requester <- pay
+		close(requester)
 		delete(c.pending, id)
 	}
 }
