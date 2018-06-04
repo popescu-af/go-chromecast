@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver"
 	"github.com/oliverpool/go-chromecast/command/media/tvnow_dash"
 	"github.com/oliverpool/go-chromecast/command/media/youtube"
 
@@ -33,21 +35,30 @@ func main() {
 		fatalf(err.Error())
 	}
 
-	loaders := map[string]media.URLLoader{
-		"tvnow":   tvnow_dash.URLLoader,
-		"youtube": youtube.URLLoader,
+	loaders := []struct {
+		name   string
+		loader media.URLLoader
+	}{
+		{"tvnow", tvnow_dash.URLLoader},
+		{"youtube", youtube.URLLoader},
+		{"default", defaultreceiver.URLLoader},
 	}
 
-	for name, l := range loaders {
-		loader, err := l(rawurl)
+	for _, l := range loaders {
+		loader, err := l.loader(rawurl)
 		if err != nil {
-			logger.Log("loader", name, "err", err)
+			logger.Log("loader", l.name, "err", err)
 			continue
 		}
-		_, err = loader(client, status)
+		c, err := loader(client, status)
 		if err != nil {
-			logger.Log("loader", name, "unable to load", err)
+			logger.Log("loader", l.name, "state", "loading", "err", err)
 			continue
+		}
+		select {
+		case <-c:
+		case <-time.After(3 * time.Second):
+			logger.Log("loader", l.name, "err", "load request didn't return after 3s")
 		}
 		return
 	}
