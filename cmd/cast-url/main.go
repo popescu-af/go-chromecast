@@ -57,8 +57,8 @@ func main() {
 		}
 		select {
 		case <-c:
-		case <-time.After(3 * time.Second):
-			logger.Log("loader", l.name, "err", "load request didn't return after 3s")
+		case <-time.After(10 * time.Second):
+			logger.Log("loader", l.name, "err", "load request didn't return after 10s")
 		}
 		return
 	}
