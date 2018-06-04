@@ -38,7 +38,7 @@ func ExtractType(rawurl string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not parse url '%s': %v", rawurl, err)
 	}
-	if t := u.Query().Get("extension"); t != "" {
+	if t := u.Query().Get("ext"); t != "" {
 		return contentTypeFromExtension(t), nil
 	}
 	return contentTypeFromExtension(path.Ext(u.Path)), nil
@@ -55,6 +55,6 @@ func contentTypeFromExtension(ext string) string {
 	case ".mp4":
 		return "video/mp4"
 	default:
-		return "video/mp4"
+		return ""
 	}
 }
