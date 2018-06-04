@@ -1,7 +1,12 @@
 package defaultreceiver
 
-// From https://gist.github.com/jloutsenhizer/8855258
+import (
+	chromecast "github.com/oliverpool/go-chromecast"
+	"github.com/oliverpool/go-chromecast/command/media"
+)
 
 const ID = "CC1AD845"
-const Name = "Default Media Receiver"
-const URL = "https://www.gstatic.com/eureka/player/player.html?skin=https://www.gstatic.com/eureka/player/0000/skins/cast/skin.css"
+
+func LaunchAndConnect(client chromecast.Client, statuses ...chromecast.Status) (*media.App, error) {
+	return media.LaunchAndConnect(client, ID, statuses...)
+}

@@ -228,3 +228,5 @@ func unmarshalStatus(payload []byte) (s statusResponse, err error) {
 	err = json.Unmarshal(payload, &s)
 	return s, err
 }
+
+type URLLoader func(rawurl string, options ...Option) (func(client chromecast.Client, statuses ...chromecast.Status) (<-chan []byte, error), error)
