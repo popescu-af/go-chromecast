@@ -55,7 +55,7 @@ func TestURLParsing(t *testing.T) {
 	}{
 		{
 			url:    "https://www.tvnow.de/vox/die-pferdeprofis/wallach-watabi-schimmelstute-naira-2018-06-02-19-10-00/player",
-			prefix: "https://vodnowusodash.secure.footprint.net/proxy/clear/manifest/tvnow/571634-1-36465.ism/.mpd",
+			prefix: "https://vodnowusodash-a.akamaihd.net/proxy/clear/manifest/tvnow/571634-1-36465.ism/.mpd",
 		},
 	}
 
