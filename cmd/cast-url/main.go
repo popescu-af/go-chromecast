@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver"
-	"github.com/oliverpool/go-chromecast/command/media/tvnow_dash"
+	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver/tatort"
+	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver/tvnow"
 	"github.com/oliverpool/go-chromecast/command/media/youtube"
 
 	"github.com/oliverpool/go-chromecast/cli"
@@ -39,7 +40,8 @@ func main() {
 		name   string
 		loader media.URLLoader
 	}{
-		{"tvnow", tvnow_dash.URLLoader},
+		{"tatort", tatort.URLLoader},
+		{"tvnow", tvnow.URLLoader},
 		{"youtube", youtube.URLLoader},
 		{"default", defaultreceiver.URLLoader},
 	}

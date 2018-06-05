@@ -29,7 +29,7 @@ func URLLoader(rawurl string, options ...media.Option) (func(client chromecast.C
 			ContentID:   rawurl,
 			ContentType: contentType,
 			StreamType:  "BUFFERED",
-		})
+		}, options...)
 	}, nil
 }
 

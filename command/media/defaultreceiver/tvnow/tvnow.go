@@ -1,4 +1,4 @@
-package tvnow_dash
+package tvnow
 
 import (
 	"encoding/json"
@@ -10,16 +10,15 @@ import (
 
 	"github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/command/media"
+	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver"
 )
-
-const ID = "CC1AD845" // use default receiver
 
 type App struct {
 	*media.App
 }
 
 func LaunchAndConnect(client chromecast.Client, statuses ...chromecast.Status) (App, error) {
-	app, err := media.LaunchAndConnect(client, ID, statuses...)
+	app, err := media.LaunchAndConnect(client, defaultreceiver.ID, statuses...)
 	return App{app}, err
 }
 
@@ -50,7 +49,7 @@ func URLLoader(rawurl string, options ...media.Option) (func(client chromecast.C
 		if err != nil {
 			return nil, err
 		}
-		return app.Load(id)
+		return app.Load(id, options...)
 	}, nil
 }
 

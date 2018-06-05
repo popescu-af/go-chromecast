@@ -47,7 +47,7 @@ func URLLoader(rawurl string, options ...media.Option) (func(client chromecast.C
 		if err != nil {
 			return nil, err
 		}
-		return app.Load(id)
+		return app.Load(id, options...)
 	}, nil
 }
 

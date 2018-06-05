@@ -1,4 +1,4 @@
-package tvnow_dash
+package tvnow
 
 import (
 	"io"
