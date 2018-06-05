@@ -18,7 +18,7 @@ type App struct {
 }
 
 func LaunchAndConnect(client chromecast.Client, statuses ...chromecast.Status) (App, error) {
-	app, err := media.LaunchAndConnect(client, defaultreceiver.ID, statuses...)
+	app, err := defaultreceiver.LaunchAndConnect(client, statuses...)
 	return App{app}, err
 }
 
