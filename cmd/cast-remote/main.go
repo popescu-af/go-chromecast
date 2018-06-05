@@ -16,7 +16,6 @@ import (
 
 	"github.com/oliverpool/go-chromecast/cli"
 	"github.com/oliverpool/go-chromecast/command/media"
-	"github.com/oliverpool/go-chromecast/command/receiver"
 )
 
 func fatalf(format string, a ...interface{}) int {
@@ -75,7 +74,7 @@ func remote(ctx context.Context, logger chromecast.Logger) int {
 	if err != nil {
 		fatalf(err.Error())
 	}
-	launcher := receiver.Launcher{Requester: client}
+	launcher := media.Launcher{Requester: client}
 
 	// Get Media app
 	fmt.Print("\nWaiting for a media app...")
