@@ -31,14 +31,6 @@ func (a App) Load(id string, options ...media.Option) (<-chan []byte, error) {
 	return a.App.Load(item, options...)
 }
 
-func (a App) LoadURL(rawurl string, options ...media.Option) (<-chan []byte, error) {
-	id, err := ExtractID(rawurl)
-	if err != nil {
-		return nil, err
-	}
-	return a.Load(id, options...)
-}
-
 func URLLoader(rawurl string, options ...media.Option) (func(client chromecast.Client, statuses ...chromecast.Status) (<-chan []byte, error), error) {
 	id, err := ExtractID(rawurl)
 	if err != nil {
