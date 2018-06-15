@@ -20,7 +20,7 @@ func main() {
 	ctx := context.Background()
 
 	logger := log.NopLogger()
-	if os.Getenv("DEBUG") == "" {
+	if os.Getenv("DEBUG") != "" {
 		logger = log.New(os.Stdout)
 	}
 
