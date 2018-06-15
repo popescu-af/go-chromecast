@@ -17,10 +17,10 @@ import (
 )
 
 // FirstClientWithStatus find a device, connects a client and get its status (and is verbose)
-func FirstClientWithStatus(ctx context.Context, logger chromecast.Logger) (chromecast.Client, chromecast.Status, error) {
+func FirstClientWithStatus(ctx context.Context, logger chromecast.Logger, matchers ...discovery.DeviceMatcher) (chromecast.Client, chromecast.Status, error) {
 	// Find device
 	fmt.Print("Searching device... ")
-	chr, err := discovery.Service{Scanner: zeroconf.Scanner{Logger: logger}}.First(ctx)
+	chr, err := discovery.Service{Scanner: zeroconf.Scanner{Logger: logger}}.First(ctx, matchers...)
 	if err != nil || chr == nil {
 		return nil, chromecast.Status{}, fmt.Errorf("could not discover a device: %v", err)
 	}
