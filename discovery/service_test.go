@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"context"
 
@@ -51,8 +52,7 @@ func TestFirstCancelled(t *testing.T) {
 
 	service := discovery.Service{Scanner: &scan}
 
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
 	first, err := service.First(ctx)
@@ -93,14 +93,15 @@ func TestNamedDirect(t *testing.T) {
 
 	service := discovery.Service{Scanner: &scan}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 
-	first, err := service.Named(ctx, "casti")
+	first, err := service.First(ctx, discovery.WithName("casti"))
 	if err != nil {
 		t.Errorf("unexpected error %v", err)
 	}
 	if first == nil {
-		t.Errorf("a client should have been found")
+		t.Fatalf("a client should have been found")
 	}
 	if first.Name() != "casti" {
 		t.Errorf("the client should been named 'casti' and not '%s'", first.Name())
@@ -130,11 +131,10 @@ func TestNamedCancelled(t *testing.T) {
 
 	service := discovery.Service{Scanner: &scan}
 
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	first, err := service.Named(ctx, "casti")
+	first, err := service.First(ctx, discovery.WithName("casti"))
 	if err != ctx.Err() {
 		t.Errorf("unexpected error %v", err)
 	}
@@ -148,37 +148,6 @@ func TestNamedCancelled(t *testing.T) {
 		t.Errorf("scanner should have been called at most once, and not %d times", scan.ScanFuncCalled)
 	}
 	<-done
-}
-
-func TestUniq(t *testing.T) {
-	in := make(chan *chromecast.Device, 10)
-	in <- &chromecast.Device{}
-	in <- &chromecast.Device{}
-	in <- &chromecast.Device{}
-	in <- &chromecast.Device{}
-	c := &chromecast.Device{
-		Properties: map[string]string{
-			"id": "123",
-		},
-	}
-	in <- c
-	in <- c
-	close(in)
-
-	out := make(chan *chromecast.Device, 2)
-	discovery.Uniq(in, out)
-	c = <-out
-	if c.ID() != "" {
-		t.Errorf("unexpected ID: %s", c.ID())
-	}
-	c = <-out
-	if c.ID() != "123" {
-		t.Errorf("unexpected ID: %s", c.ID())
-	}
-	c, ok := <-out
-	if ok {
-		t.Error("out should have been closed")
-	}
 }
 
 func TestNewDevice(t *testing.T) {

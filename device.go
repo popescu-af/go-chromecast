@@ -1,7 +1,9 @@
 package chromecast
 
-import "net"
-import "fmt"
+import (
+	"fmt"
+	"net"
+)
 
 type Device struct {
 	IP         net.IP
