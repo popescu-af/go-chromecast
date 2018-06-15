@@ -7,6 +7,7 @@ import (
 
 	"github.com/oliverpool/go-chromecast/cli"
 	"github.com/oliverpool/go-chromecast/command/media"
+	"github.com/oliverpool/go-chromecast/log"
 )
 
 func fatalf(format string, a ...interface{}) {
