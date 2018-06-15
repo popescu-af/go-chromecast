@@ -1,21 +1,22 @@
-package cli
+package log
 
 import (
 	"io"
-	"os"
 
 	kitlog "github.com/go-kit/kit/log"
 
 	"github.com/oliverpool/go-chromecast"
 )
 
-// NewLogger creates a new structures logger.
-func NewLogger(out io.Writer) chromecast.Logger {
-	if os.Getenv("DEBUG") == "" {
-		return kitlog.NewNopLogger()
-	}
+// New creates a new structured logger.
+func New(out io.Writer) chromecast.Logger {
 	w := kitlog.NewSyncWriter(out)
 	logger := kitlog.NewLogfmtLogger(w)
 	logger = kitlog.With(logger, "ts", kitlog.DefaultTimestampUTC, "caller", kitlog.DefaultCaller)
 	return logger
+}
+
+// NopLogger returns a logger that doesn't do anything
+func NopLogger() chromecast.Logger {
+	return kitlog.NewNopLogger()
 }

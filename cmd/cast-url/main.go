@@ -10,6 +10,7 @@ import (
 	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver/tatort"
 	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver/tvnow"
 	"github.com/oliverpool/go-chromecast/command/media/youtube"
+	"github.com/oliverpool/go-chromecast/log"
 
 	"github.com/oliverpool/go-chromecast/cli"
 	"github.com/oliverpool/go-chromecast/command/media"
@@ -29,7 +30,10 @@ func main() {
 		rawurl = os.Args[1]
 	}
 
-	logger := cli.NewLogger(os.Stdout)
+	logger := log.NopLogger()
+	if os.Getenv("DEBUG") == "" {
+		logger = log.New(os.Stdout)
+	}
 
 	client, status, err := cli.FirstClientWithStatus(ctx, logger)
 	if err != nil {

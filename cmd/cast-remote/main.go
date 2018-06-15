@@ -11,6 +11,7 @@ import (
 	"github.com/oliverpool/go-chromecast"
 
 	"github.com/oliverpool/go-chromecast/cli/local"
+	"github.com/oliverpool/go-chromecast/log"
 
 	"github.com/gosuri/uiprogress"
 
@@ -26,7 +27,10 @@ func fatalf(format string, a ...interface{}) int {
 
 func main() {
 	ctx := context.Background()
-	logger := cli.NewLogger(os.Stdout)
+	logger := log.NopLogger()
+	if os.Getenv("DEBUG") == "" {
+		logger = log.New(os.Stdout)
+	}
 
 	var cancel context.CancelFunc
 	if timeout, err := time.ParseDuration(os.Getenv("TIMEOUT")); err == nil {

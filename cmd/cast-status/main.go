@@ -18,7 +18,10 @@ func fatalf(format string, a ...interface{}) {
 func main() {
 	ctx := context.Background()
 
-	logger := cli.NewLogger(os.Stdout)
+	logger := log.NopLogger()
+	if os.Getenv("DEBUG") == "" {
+		logger = log.New(os.Stdout)
+	}
 
 	client, status, err := cli.FirstClientWithStatus(ctx, logger)
 	if err != nil {
