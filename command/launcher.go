@@ -1,11 +1,10 @@
-package media
+package command
 
 import (
 	"encoding/json"
 	"fmt"
 
 	chromecast "github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/command"
 )
 
 type Launcher struct {
@@ -14,8 +13,8 @@ type Launcher struct {
 
 func (l Launcher) statusRequest(pay chromecast.IdentifiablePayload) (st chromecast.Status, err error) {
 	env := chromecast.Envelope{
-		Source:      command.DefaultSource,
-		Destination: command.DefaultDestination,
+		Source:      DefaultSource,
+		Destination: DefaultDestination,
 		Namespace:   "urn:x-cast:com.google.cast.receiver",
 	}
 
@@ -42,7 +41,7 @@ func (l Launcher) statusRequest(pay chromecast.IdentifiablePayload) (st chromeca
 }
 
 func (l Launcher) Status() (st chromecast.Status, err error) {
-	pay := command.Map{
+	pay := Map{
 		"type": "GET_STATUS",
 	}
 	return l.statusRequest(pay)
@@ -56,7 +55,7 @@ func (l Launcher) Launch(appID string, statuses ...chromecast.Status) (st chrome
 			return st, nil
 		}
 	}
-	pay := command.Map{
+	pay := Map{
 		"type":  "LAUNCH",
 		"appId": appID,
 	}
@@ -64,7 +63,7 @@ func (l Launcher) Launch(appID string, statuses ...chromecast.Status) (st chrome
 }
 
 func (l Launcher) Stop() (st chromecast.Status, err error) {
-	pay := command.Map{
+	pay := Map{
 		"type": "STOP",
 	}
 	return l.statusRequest(pay)
@@ -74,7 +73,7 @@ func (l Launcher) SetVolume(level float64) (st chromecast.Status, err error) {
 	vol := chromecast.Volume{
 		Level: &level,
 	}
-	pay := command.Map{
+	pay := Map{
 		"type":   "SET_VOLUME",
 		"volume": vol,
 	}
@@ -85,7 +84,7 @@ func (l Launcher) Mute(muted bool) (st chromecast.Status, err error) {
 	vol := chromecast.Volume{
 		Muted: &muted,
 	}
-	pay := command.Map{
+	pay := Map{
 		"type":   "SET_VOLUME",
 		"volume": vol,
 	}

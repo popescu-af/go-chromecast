@@ -9,7 +9,6 @@ import (
 	"github.com/oliverpool/go-chromecast/client"
 	"github.com/oliverpool/go-chromecast/command"
 	"github.com/oliverpool/go-chromecast/command/heartbeat"
-	"github.com/oliverpool/go-chromecast/command/media"
 	"github.com/oliverpool/go-chromecast/discovery"
 	"github.com/oliverpool/go-chromecast/discovery/zeroconf"
 	"github.com/oliverpool/go-chromecast/gogoprotobuf"
@@ -34,7 +33,7 @@ func FirstClientWithStatus(ctx context.Context, logger chromecast.Logger, matche
 	}
 	fmt.Println(" OK")
 
-	launcher := media.Launcher{Requester: client}
+	launcher := command.Launcher{Requester: client}
 
 	// Get receiver status
 	fmt.Print("\nGetting receiver status...")

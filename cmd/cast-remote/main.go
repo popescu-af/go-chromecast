@@ -11,6 +11,7 @@ import (
 	"github.com/oliverpool/go-chromecast"
 
 	"github.com/oliverpool/go-chromecast/cli/local"
+	"github.com/oliverpool/go-chromecast/command"
 	"github.com/oliverpool/go-chromecast/log"
 
 	"github.com/gosuri/uiprogress"
@@ -78,7 +79,7 @@ func remote(ctx context.Context, logger chromecast.Logger) int {
 	if err != nil {
 		fatalf(err.Error())
 	}
-	launcher := media.Launcher{Requester: client}
+	launcher := command.Launcher{Requester: client}
 
 	// Get Media app
 	fmt.Print("\nWaiting for a media app...")
