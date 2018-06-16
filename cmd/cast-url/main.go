@@ -10,6 +10,7 @@ import (
 	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver/tatort"
 	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver/tvnow"
 	"github.com/oliverpool/go-chromecast/command/media/youtube"
+	"github.com/oliverpool/go-chromecast/command/urlreceiver"
 	"github.com/oliverpool/go-chromecast/log"
 
 	"github.com/oliverpool/go-chromecast/cli"
@@ -48,6 +49,7 @@ func main() {
 		{"tvnow", tvnow.URLLoader},
 		{"youtube", youtube.URLLoader},
 		{"default", defaultreceiver.URLLoader},
+		{"urlreceiver", urlreceiver.URLLoader},
 	}
 
 	for _, l := range loaders {

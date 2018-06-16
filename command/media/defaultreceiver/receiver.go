@@ -41,6 +41,10 @@ func ExtractType(rawurl string) (string, error) {
 	if t := u.Query().Get("ext"); t != "" {
 		return contentTypeFromExtension(t), nil
 	}
+	t := contentTypeFromExtension(path.Ext(u.Path))
+	if t == "" {
+		return "", fmt.Errorf("could not find suitable content-type for '%s'", path.Ext(u.Path))
+	}
 	return contentTypeFromExtension(path.Ext(u.Path)), nil
 }
 
