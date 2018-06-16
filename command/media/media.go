@@ -15,46 +15,31 @@ import (
 const Namespace = "urn:x-cast:com.google.cast.media"
 
 type App struct {
-	Envelope chromecast.Envelope
-	Client   chromecast.Client
+	*command.App
 
 	mu           sync.Mutex
 	latestStatus []Status
 }
 
 func LaunchAndConnect(client chromecast.Client, id string, statuses ...chromecast.Status) (*App, error) {
-	st, err := command.Launcher{Requester: client}.Launch(id, statuses...)
-	if err != nil {
-		return nil, fmt.Errorf("could not launch app: %v", err)
-	}
-	app := st.AppWithID(id)
-	if app == nil {
-		return nil, fmt.Errorf("the launched app could not be found")
-	}
-	if app.TransportId == nil {
-		return nil, fmt.Errorf("the app has no transportId")
-	}
-	return ConnectTo(client, *app.TransportId)
-}
-
-func ConnectFromStatus(client chromecast.Client, st chromecast.Status) (*App, error) {
-	destination, err := st.FirstDestinationSupporting(Namespace)
+	a, err := command.LaunchAndConnect(client, id, statuses...)
 	if err != nil {
 		return nil, err
 	}
-	return ConnectTo(client, destination)
+	a.Envelope.Namespace = Namespace
+	return &App{
+		App: a,
+	}, nil
 }
 
-func ConnectTo(client chromecast.Client, destination string) (*App, error) {
-	a := &App{
-		Envelope: chromecast.Envelope{
-			Source:      command.DefaultSource,
-			Destination: destination,
-			Namespace:   Namespace,
-		},
-		Client: client,
+func ConnectFromStatus(client chromecast.Client, st chromecast.Status) (*App, error) {
+	a, err := command.ConnectFromStatus(client, st, Namespace)
+	if err != nil {
+		return nil, err
 	}
-	return a, command.Connect.SendTo(client, destination)
+	return &App{
+		App: a,
+	}, nil
 }
 
 type Item struct {
