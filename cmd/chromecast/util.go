@@ -14,12 +14,12 @@ import (
 	"github.com/oliverpool/go-chromecast/net"
 )
 
-func FirstClientWithStatus(ctx context.Context, logger chromecast.Logger, matchers ...discovery.DeviceMatcher) (chromecast.Client, chromecast.Status, error) {
+func GetClientWithStatus(ctx context.Context, logger chromecast.Logger) (chromecast.Client, chromecast.Status, error) {
 	// Find device
 	fmt.Print("Searching device... ")
-	chr, err := discovery.Service{Scanner: zeroconf.Scanner{Logger: logger}}.First(ctx, matchers...)
-	if err != nil || chr == nil {
-		return nil, chromecast.Status{}, fmt.Errorf("could not discover a device: %v", err)
+	chr, err := GetDevice(ctx, logger)
+	if err != nil {
+		return nil, chromecast.Status{}, err
 	}
 	fmt.Println(chr.Addr() + " OK")
 
@@ -42,6 +42,27 @@ func FirstClientWithStatus(ctx context.Context, logger chromecast.Logger, matche
 	fmt.Println(" OK")
 	fmt.Println(status.String())
 	return client, status, nil
+}
+
+func GetDevice(ctx context.Context, logger chromecast.Logger) (*chromecast.Device, error) {
+	// If IP is set, return device with corresponding IP
+	if deviceIP != nil {
+		return discovery.NewDevice(deviceIP, devicePort, nil), nil
+	}
+
+	// Otherwise search with matchers
+	var matchers []discovery.DeviceMatcher
+	if deviceName != "" {
+		matchers = append(matchers, discovery.WithName(deviceName))
+	}
+	if deviceID != "" {
+		matchers = append(matchers, discovery.WithID(deviceID))
+	}
+	chr, err := discovery.Service{Scanner: zeroconf.Scanner{Logger: logger}}.First(ctx, matchers...)
+	if err != nil || chr == nil {
+		return nil, fmt.Errorf("could not find a device: %v", err)
+	}
+	return chr, nil
 }
 
 // ConnectedClient will create a client and keep it connected

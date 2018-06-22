@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"time"
 
@@ -19,6 +20,10 @@ var rootCmd = &cobra.Command{
 
 var timeout time.Duration
 var verbose bool
+var deviceName string
+var deviceID string
+var deviceIP net.IP
+var devicePort int
 
 func flags() (chromecast.Logger, context.Context, context.CancelFunc) {
 	rootCmd.SilenceUsage = true
@@ -33,6 +38,10 @@ func flags() (chromecast.Logger, context.Context, context.CancelFunc) {
 func init() {
 	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 10*time.Second, "Duration before stopping looking for chromecast(s)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Print verbose (debug) output")
+	rootCmd.PersistentFlags().IPVar(&deviceIP, "ip", nil, "Specify chromecast IP")
+	rootCmd.PersistentFlags().IntVar(&devicePort, "port", 8009, "Specify chromecast port (ignored if IP is not set)")
+	rootCmd.PersistentFlags().StringVarP(&deviceName, "name", "n", "", "Specify chromecast name (ignored if IP is set)")
+	rootCmd.PersistentFlags().StringVar(&deviceID, "id", "", "Specify chromecast ID (ignored if IP is set)")
 }
 
 func main() {
