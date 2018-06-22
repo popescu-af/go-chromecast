@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	chromecast "github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/discovery"
@@ -13,10 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var timeout time.Duration
-
 func init() {
-	listCmd.Flags().DurationVarP(&timeout, "timeout", "t", 10*time.Second, "Duration before stopping looking for chromecast(s)")
 	rootCmd.AddCommand(listCmd)
 }
 
