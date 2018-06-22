@@ -20,7 +20,7 @@ var statusCmd = &cobra.Command{
 
 		client, status, err := GetClientWithStatus(ctx, logger)
 		if err != nil {
-			return fmt.Errorf("could not find a client: %v", err)
+			return fmt.Errorf("could not get a client: %v", err)
 		}
 
 		// Get media app
