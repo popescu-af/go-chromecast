@@ -1,14 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"os"
 
 	chromecast "github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/discovery"
 	"github.com/oliverpool/go-chromecast/discovery/zeroconf"
-	"github.com/oliverpool/go-chromecast/log"
 	"github.com/spf13/cobra"
 )
 
@@ -20,8 +17,7 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Print all the chromecast found in the network",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := log.New(os.Stdout)
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		logger, ctx, cancel := flags()
 		defer cancel()
 
 		scanner := zeroconf.Scanner{Logger: logger}
