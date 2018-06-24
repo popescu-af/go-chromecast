@@ -32,13 +32,12 @@ func GetClientWithStatus(ctx context.Context, logger chromecast.Logger) (chromec
 	launcher := command.Launcher{Requester: client}
 
 	// Get receiver status
-	fmt.Print("\nGetting receiver status...")
+	fmt.Print("Getting receiver status...")
 	status, err := launcher.Status()
 	if err != nil {
 		return nil, chromecast.Status{}, fmt.Errorf("could not get status: %v", err)
 	}
 	fmt.Println(" OK")
-	fmt.Println(status.String())
 	return client, status, nil
 }
 
