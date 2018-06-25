@@ -27,7 +27,7 @@ func LaunchAndConnect(client chromecast.Client, statuses ...chromecast.Status) (
 func (a App) Load(id string, options ...media.Option) (<-chan []byte, error) {
 	item := media.Item{
 		ContentID:   id,
-		ContentType: "video/mp4",
+		ContentType: "application/x-mpegurl",
 		StreamType:  "BUFFERED",
 	}
 	return a.App.Load(item, options...)
@@ -38,7 +38,7 @@ func URLLoader(rawurl string, options ...media.Option) (func(client chromecast.C
 	if err != nil {
 		return nil, err
 	}
-	mp4, err := ExtractMp4(rawurl, iframe)
+	m3u8, err := ExtractM3u8(rawurl, iframe)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func URLLoader(rawurl string, options ...media.Option) (func(client chromecast.C
 		if err != nil {
 			return nil, err
 		}
-		return app.Load(mp4, options...)
+		return app.Load(m3u8, options...)
 	}, nil
 }
 
@@ -76,7 +76,7 @@ func ExtractIframe(rawurl string) (string, error) {
 	return id, nil
 }
 
-func ExtractMp4(rawurl, iframe string) (string, error) {
+func ExtractM3u8(rawurl, iframe string) (string, error) {
 	req, err := http.NewRequest("GET", iframe, nil)
 	if err != nil {
 		return "", fmt.Errorf("could not prepare iframe '%s' request: %v", iframe, err)
@@ -89,7 +89,7 @@ func ExtractMp4(rawurl, iframe string) (string, error) {
 	}
 
 	defer resp.Body.Close()
-	id, err := extractMp4FromIframe(resp.Body)
+	id, err := extractM3u8FromIframe(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("could extract iframe-url from response '%s': %v", rawurl, err)
 	}
@@ -113,22 +113,17 @@ func extractIframeFromPage(body io.Reader) (string, error) {
 	return "", errors.New("no vimeo-id found")
 }
 
-func extractMp4FromIframe(body io.Reader) (string, error) {
+func extractM3u8FromIframe(body io.Reader) (string, error) {
 	scanner := bufio.NewScanner(body)
 	scanner.Split(splitOnString("\""))
 
-	bestQuality := ""
-
 	for scanner.Scan() {
 		s := scanner.Text()
-		if strings.Contains(s, ".mp4") {
-			bestQuality = s
+		if strings.Contains(s, ".m3u8") {
+			return s, nil
 		}
 	}
-	if bestQuality == "" {
-		return "", errors.New("no .mp4 vimeo-src found")
-	}
-	return bestQuality, nil
+	return "", errors.New("no .m3u8 vimeo-src found")
 }
 
 func splitOnString(delimiter string) bufio.SplitFunc {
