@@ -11,6 +11,7 @@ import (
 	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver"
 	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver/tatort"
 	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver/tvnow"
+	defaultvimeo "github.com/oliverpool/go-chromecast/command/media/defaultreceiver/vimeo"
 	"github.com/oliverpool/go-chromecast/command/media/vimeo"
 	"github.com/oliverpool/go-chromecast/command/media/youtube"
 	"github.com/oliverpool/go-chromecast/command/urlreceiver"
@@ -25,6 +26,7 @@ var loaders = []namedLoader{
 	{"tvnow", tvnow.URLLoader},
 	{"vimeo", vimeo.URLLoader},
 	{"youtube", youtube.URLLoader},
+	{"default.vimeo", defaultvimeo.URLLoader},
 	{"default", defaultreceiver.URLLoader},
 	{"urlreceiver", urlreceiver.URLLoader},
 }
