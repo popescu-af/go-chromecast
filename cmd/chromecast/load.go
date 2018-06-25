@@ -11,6 +11,7 @@ import (
 	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver"
 	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver/tatort"
 	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver/tvnow"
+	"github.com/oliverpool/go-chromecast/command/media/vimeo"
 	"github.com/oliverpool/go-chromecast/command/media/youtube"
 	"github.com/oliverpool/go-chromecast/command/urlreceiver"
 	"github.com/spf13/cobra"
@@ -22,6 +23,7 @@ var useLoader string
 var loaders = []namedLoader{
 	{"tatort", tatort.URLLoader},
 	{"tvnow", tvnow.URLLoader},
+	{"vimeo", vimeo.URLLoader},
 	{"youtube", youtube.URLLoader},
 	{"default", defaultreceiver.URLLoader},
 	{"urlreceiver", urlreceiver.URLLoader},
@@ -93,7 +95,11 @@ var loadCmd = &cobra.Command{
 			return nil
 		}
 		if useLoader != "" {
-			return fmt.Errorf("unknown loader '%s'", useLoader)
+			var ll []string
+			for _, l := range loaders {
+				ll = append(ll, l.name)
+			}
+			return fmt.Errorf("unknown loader '%s' (supported loaders: %s)", useLoader, strings.Join(ll, ", "))
 		}
 		return fmt.Errorf("no supported loader found for %s", rawurl)
 	},

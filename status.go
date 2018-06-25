@@ -28,7 +28,7 @@ func (st Status) String() string {
 		} else {
 			str.WriteString(fmt.Sprintf("Running applications: %d\n", len(st.Applications)))
 			for _, app := range st.Applications {
-				str.WriteString(fmt.Sprintf(" - [%s] %s\n", *app.DisplayName, *app.StatusText))
+				str.WriteString(fmt.Sprintf(" - [%s %s] %s\n", *app.DisplayName, *app.AppID, *app.StatusText))
 			}
 		}
 	}
