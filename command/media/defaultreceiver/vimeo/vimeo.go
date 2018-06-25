@@ -121,7 +121,7 @@ func extractMp4FromIframe(body io.Reader) (string, error) {
 
 	for scanner.Scan() {
 		s := scanner.Text()
-		if strings.HasSuffix(s, ".mp4") {
+		if strings.Contains(s, ".mp4") {
 			bestQuality = s
 		}
 	}
