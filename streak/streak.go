@@ -27,7 +27,7 @@ type Streaker struct {
 	streakStart time.Time
 }
 
-// Factor indicates which factor should be returned after a streak lasted the given duration
+// Factor indicates which value should be returned after a streak lasted the given duration
 type Factor struct {
 	After time.Duration
 	Value int64
