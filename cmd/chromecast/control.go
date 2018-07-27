@@ -51,10 +51,6 @@ var controlCmd = &cobra.Command{
 	},
 }
 
-func fatalf(format string, a ...interface{}) error {
-	return fmt.Errorf(format, a...)
-}
-
 func newStreakFactor() func() int64 {
 	s := streak.New(50*time.Millisecond, streak.Factor{
 		After: 3 * time.Second,
@@ -97,22 +93,22 @@ func remote() error {
 			break
 		}
 		if clientCtx.Err() != nil {
-			return fatalf("%v", clientCtx.Err())
+			return fmt.Errorf("%v", clientCtx.Err())
 		}
 		if err == chromecast.ErrAppNotFound {
 			select {
 			case <-clientCtx.Done():
-				return fatalf("interrupted: %v", clientCtx.Err())
+				return fmt.Errorf("interrupted: %v", clientCtx.Err())
 			case <-time.After(time.Second):
 			}
 			fmt.Print(".")
 			status, err = launcher.Status()
 			if err != nil {
-				return fatalf("could not get status: %v", err)
+				return fmt.Errorf("could not get status: %v", err)
 			}
 			continue
 		} else if err != nil {
-			return fatalf(" failed: %v", err)
+			return fmt.Errorf(" failed: %v", err)
 		}
 	}
 
@@ -214,13 +210,13 @@ func remote() error {
 	for len(appStatus) == 0 || appStatus[0].Item == nil || appStatus[0].Item.Duration.Seconds() == 0 {
 		select {
 		case <-clientCtx.Done():
-			return fatalf("interrupted: %v", clientCtx.Err())
+			return fmt.Errorf("interrupted: %v", clientCtx.Err())
 		case <-time.After(time.Second):
 		}
 		fmt.Print(".")
 		appStatus, err = app.Status()
 		if err != nil {
-			return fatalf("status could not be fetch: %v", err)
+			return fmt.Errorf("status could not be fetch: %v", err)
 		}
 	}
 	fmt.Println(" OK")
@@ -228,7 +224,7 @@ func remote() error {
 	fmt.Print("Getting a session...")
 	session, err = app.CurrentSession()
 	if err != nil {
-		return fatalf("could not get a session: %v", err)
+		return fmt.Errorf("could not get a session: %v", err)
 	}
 	fmt.Println(" OK")
 
