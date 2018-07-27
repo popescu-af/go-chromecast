@@ -53,12 +53,11 @@ func ConnectedClient(ctx context.Context, addr string, logger chromecast.Logger)
 		Logger: logger,
 	}
 	c := client.New(&serializer, logger)
-
-	go func() {
-		<-ctx.Done()
+	c.AfterClose = append(c.AfterClose, func() {
 		command.Close.Send(c)
 		conn.Close()
-	}()
+	})
+
 	go heartbeat.RespondToPing(c)
 
 	return c, command.Connect.Send(c)

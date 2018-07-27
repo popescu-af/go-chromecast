@@ -68,6 +68,7 @@ var loadCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("could not get a client: %v", err)
 		}
+		defer client.Close()
 
 		for _, l := range loaders {
 			var c <-chan []byte

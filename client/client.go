@@ -39,7 +39,8 @@ func New(serializer chromecast.Serializer, logger chromecast.Logger) *Client {
 
 type Client struct {
 	chromecast.Serializer
-	Logger chromecast.Logger
+	Logger     chromecast.Logger
+	AfterClose []func()
 
 	requestID uint32
 	mu        sync.Mutex
@@ -162,6 +163,9 @@ func (c *Client) Close() error {
 			}
 			delete(envs, responseType)
 		}
+	}
+	for _, cb := range c.AfterClose {
+		cb()
 	}
 	return nil
 }
