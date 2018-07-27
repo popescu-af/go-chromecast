@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -16,7 +15,6 @@ import (
 	"github.com/oliverpool/go-chromecast/cli/local"
 	"github.com/oliverpool/go-chromecast/command"
 	"github.com/oliverpool/go-chromecast/command/media"
-	"github.com/oliverpool/go-chromecast/log"
 	"github.com/spf13/cobra"
 )
 
@@ -49,19 +47,7 @@ var controlCmd = &cobra.Command{
 	Short: "Control a chromecast",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := context.Background()
-		logger := log.NopLogger()
-		if os.Getenv("DEBUG") != "" {
-			logger = log.New(os.Stdout)
-		}
-
-		var cancel context.CancelFunc
-		if timeout, err := time.ParseDuration(os.Getenv("TIMEOUT")); err == nil {
-			ctx, cancel = context.WithTimeout(ctx, timeout)
-			logger.Log("timeout", timeout)
-			defer cancel()
-		}
-		return remote(ctx, logger)
+		return remote()
 	},
 }
 
@@ -83,21 +69,22 @@ func newStreakFactor() func() int64 {
 	return s.UpdatedFactor
 }
 
-func remote(ctx context.Context, logger chromecast.Logger) error {
+func remote() error {
 	clientCtx := context.Background()
 	clientCtx, clientCancel := context.WithCancel(clientCtx)
 
-	ctx, initCancel := context.WithCancel(ctx)
+	logger, initCtx, initCancel := flags()
 	cancel := func() {
 		clientCancel()
 		initCancel()
 	}
 	defer cancel()
 
-	client, status, err := cli.FirstClientWithStatus(ctx, logger)
+	client, status, err := GetClientWithStatus(initCtx, logger)
 	if err != nil {
-		return fatalf(err.Error())
+		return fmt.Errorf("could not get a client: %v", err)
 	}
+	defer client.Close()
 	launcher := command.Launcher{Requester: client}
 
 	// Get Media app
@@ -109,13 +96,13 @@ func remote(ctx context.Context, logger chromecast.Logger) error {
 			fmt.Println(" OK")
 			break
 		}
-		if ctx.Err() != nil {
-			return fatalf("%v", ctx.Err())
+		if clientCtx.Err() != nil {
+			return fatalf("%v", clientCtx.Err())
 		}
 		if err == chromecast.ErrAppNotFound {
 			select {
-			case <-ctx.Done():
-				return fatalf("interrupted: %v", ctx.Err())
+			case <-clientCtx.Done():
+				return fatalf("interrupted: %v", clientCtx.Err())
 			case <-time.After(time.Second):
 			}
 			fmt.Print(".")
@@ -226,8 +213,8 @@ func remote(ctx context.Context, logger chromecast.Logger) error {
 	appStatus := app.LatestStatus()
 	for len(appStatus) == 0 || appStatus[0].Item == nil || appStatus[0].Item.Duration.Seconds() == 0 {
 		select {
-		case <-ctx.Done():
-			return fatalf("interrupted: %v", ctx.Err())
+		case <-clientCtx.Done():
+			return fatalf("interrupted: %v", clientCtx.Err())
 		case <-time.After(time.Second):
 		}
 		fmt.Print(".")
