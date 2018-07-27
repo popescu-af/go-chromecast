@@ -14,15 +14,15 @@ import (
 
 func GetClientWithStatus(ctx context.Context, logger chromecast.Logger) (chromecast.Client, chromecast.Status, error) {
 	// Find device
-	fmt.Print("Searching device... ")
+	fmt.Print("Searching device...")
 	chr, err := deviceFinder.GetDevice(ctx, logger)
 	if err != nil {
 		return nil, chromecast.Status{}, err
 	}
-	fmt.Println(chr.Addr() + " OK")
+	fmt.Println(" " + chr.Addr() + " OK")
 
 	// Connect client
-	fmt.Print("Connecting client... ")
+	fmt.Print("Connecting client...")
 	client, err := ConnectedClient(ctx, chr.Addr(), logger)
 	if err != nil {
 		return nil, chromecast.Status{}, fmt.Errorf("could not connect to client: %v", err)

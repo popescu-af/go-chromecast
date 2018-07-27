@@ -84,32 +84,9 @@ func remote() error {
 	launcher := command.Launcher{Requester: client}
 
 	// Get Media app
-	fmt.Print("\nWaiting for a media app...")
-	var app *media.App
-	for {
-		app, err = media.ConnectFromStatus(client, status)
-		if err == nil {
-			fmt.Println(" OK")
-			break
-		}
-		if clientCtx.Err() != nil {
-			return fmt.Errorf("%v", clientCtx.Err())
-		}
-		if err == chromecast.ErrAppNotFound {
-			select {
-			case <-clientCtx.Done():
-				return fmt.Errorf("interrupted: %v", clientCtx.Err())
-			case <-time.After(time.Second):
-			}
-			fmt.Print(".")
-			status, err = launcher.Status()
-			if err != nil {
-				return fmt.Errorf("could not get status: %v", err)
-			}
-			continue
-		} else if err != nil {
-			return fmt.Errorf(" failed: %v", err)
-		}
+	app, err := getMediaApp(client, status)
+	if err != nil {
+		return fmt.Errorf("could not get a media app: %v", err)
 	}
 
 	go app.UpdateStatus()
@@ -259,4 +236,25 @@ func remote() error {
 	wg.Wait()
 
 	return nil
+}
+
+func getMediaApp(client chromecast.Client, status chromecast.Status) (app *media.App, err error) {
+	fmt.Print("\nWaiting for a media app...")
+	for {
+		app, err = media.ConnectFromStatus(client, status)
+		switch err {
+		case nil:
+			fmt.Println(" OK")
+			return app, nil
+		case chromecast.ErrAppNotFound:
+			time.Sleep(time.Second)
+			fmt.Print(".")
+			status, err = command.Launcher{Requester: client}.Status()
+			if err != nil {
+				return app, fmt.Errorf("could not get status: %v", err)
+			}
+		default:
+			return app, fmt.Errorf("unexpected failure: %v", err)
+		}
+	}
 }
