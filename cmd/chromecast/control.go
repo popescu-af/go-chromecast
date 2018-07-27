@@ -49,35 +49,27 @@ var controlCmd = &cobra.Command{
 	Short: "Control a chromecast",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("remote control")
-		return mainControl()
+		ctx := context.Background()
+		logger := log.NopLogger()
+		if os.Getenv("DEBUG") != "" {
+			logger = log.New(os.Stdout)
+		}
+
+		var cancel context.CancelFunc
+		if timeout, err := time.ParseDuration(os.Getenv("TIMEOUT")); err == nil {
+			ctx, cancel = context.WithTimeout(ctx, timeout)
+			logger.Log("timeout", timeout)
+			defer cancel()
+		}
+		return remote(ctx, logger)
 	},
 }
 
-func fatalf(format string, a ...interface{}) int {
-	fmt.Printf(format, a...)
-	fmt.Println()
-	return 1
+func fatalf(format string, a ...interface{}) error {
+	return fmt.Errorf(format, a...)
 }
 
-func mainControl() error {
-	ctx := context.Background()
-	logger := log.NopLogger()
-	if os.Getenv("DEBUG") != "" {
-		logger = log.New(os.Stdout)
-	}
-
-	var cancel context.CancelFunc
-	if timeout, err := time.ParseDuration(os.Getenv("TIMEOUT")); err == nil {
-		ctx, cancel = context.WithTimeout(ctx, timeout)
-		logger.Log("timeout", timeout)
-		defer cancel()
-	}
-	os.Exit(remote(ctx, logger))
-	return nil
-}
-
-func newStreaker() func() int64 {
+func newStreakFactor() func() int64 {
 	s := streak.New(50*time.Millisecond, streak.Factor{
 		After: 3 * time.Second,
 		Value: 6,
@@ -91,7 +83,7 @@ func newStreaker() func() int64 {
 	return s.UpdatedFactor
 }
 
-func remote(ctx context.Context, logger chromecast.Logger) int {
+func remote(ctx context.Context, logger chromecast.Logger) error {
 	clientCtx := context.Background()
 	clientCtx, clientCancel := context.WithCancel(clientCtx)
 
@@ -104,7 +96,7 @@ func remote(ctx context.Context, logger chromecast.Logger) int {
 
 	client, status, err := cli.FirstClientWithStatus(ctx, logger)
 	if err != nil {
-		fatalf(err.Error())
+		return fatalf(err.Error())
 	}
 	launcher := command.Launcher{Requester: client}
 
@@ -148,8 +140,8 @@ func remote(ctx context.Context, logger chromecast.Logger) int {
 	lstatus := local.New(status)
 	// lstatus.UpdateMedia(app.LatestStatus()[0])
 
-	forwardFactor := newStreaker()
-	backwardFactor := newStreaker()
+	forwardFactor := newStreakFactor()
+	backwardFactor := newStreakFactor()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -283,5 +275,5 @@ func remote(ctx context.Context, logger chromecast.Logger) int {
 
 	wg.Wait()
 
-	return 0
+	return nil
 }
