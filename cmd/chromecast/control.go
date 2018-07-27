@@ -8,6 +8,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/oliverpool/go-chromecast/streak"
+
 	"github.com/gosuri/uiprogress"
 	chromecast "github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/cli"
@@ -75,26 +77,18 @@ func mainControl() error {
 	return nil
 }
 
-func newStreakFactor() func() int64 {
-	var streakStart time.Time
-	var previousHit time.Time
-	return func() int64 {
-		now := time.Now()
-		defer func() { previousHit = now }()
-		if now.Sub(previousHit) < 50*time.Millisecond {
-			switch {
-			case now.Sub(streakStart) > 3*time.Second:
-				return 6
-			case now.Sub(streakStart) > 2*time.Second:
-				return 4
-			case now.Sub(streakStart) > time.Second:
-				return 2
-			}
-		} else {
-			streakStart = now
-		}
-		return 1
-	}
+func newStreaker() func() int64 {
+	s := streak.New(50*time.Millisecond, streak.Factor{
+		After: 3 * time.Second,
+		Value: 6,
+	}, streak.Factor{
+		After: 2 * time.Second,
+		Value: 4,
+	}, streak.Factor{
+		After: 1 * time.Second,
+		Value: 2,
+	})
+	return s.UpdatedFactor
 }
 
 func remote(ctx context.Context, logger chromecast.Logger) int {
@@ -154,8 +148,8 @@ func remote(ctx context.Context, logger chromecast.Logger) int {
 	lstatus := local.New(status)
 	// lstatus.UpdateMedia(app.LatestStatus()[0])
 
-	forwardFactor := newStreakFactor()
-	backwardFactor := newStreakFactor()
+	forwardFactor := newStreaker()
+	backwardFactor := newStreaker()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
