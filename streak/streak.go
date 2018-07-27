@@ -17,6 +17,8 @@ func New(maxDelayBetweenHits time.Duration, factors ...Factor) Streaker {
 	}
 }
 
+// Streaker contains the streaker parameters
+// Factors must be sorted
 type Streaker struct {
 	MaxDelayBetweenHits time.Duration
 	Factors             []Factor
@@ -25,19 +27,19 @@ type Streaker struct {
 	streakStart time.Time
 }
 
+// Factor indicates which factor should be returned after a streak lasted the given duration
 type Factor struct {
 	After time.Duration
 	Value int64
 }
 
+// UpdatedFactor returns the factor after considering a hit
 func (s *Streaker) UpdatedFactor() (value int64) {
-	now := time.Now()
+	return s.Factor(s.Hit())
+}
 
-	if now.Sub(s.previousHit) > s.MaxDelayBetweenHits {
-		s.streakStart = now
-	}
-
-	streakDuration := now.Sub(s.streakStart)
+// Factor returns the factor for a given streak duration
+func (s Streaker) Factor(streakDuration time.Duration) (value int64) {
 	value = 1
 	for _, f := range s.Factors {
 		if f.After > streakDuration {
@@ -45,7 +47,16 @@ func (s *Streaker) UpdatedFactor() (value int64) {
 		}
 		value = f.Value
 	}
-
-	s.previousHit = now
 	return value
+}
+
+// Hit considers a hit
+// it returns the current streak duration
+func (s *Streaker) Hit() time.Duration {
+	now := time.Now()
+	if now.Sub(s.previousHit) > s.MaxDelayBetweenHits {
+		s.streakStart = now
+	}
+	s.previousHit = now
+	return now.Sub(s.streakStart)
 }

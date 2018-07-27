@@ -7,7 +7,7 @@ import (
 	"github.com/oliverpool/go-chromecast/streak"
 )
 
-const baseTime = 50 * time.Millisecond
+const baseTime = 10 * time.Millisecond
 const timeMargin = 1 * time.Millisecond
 
 func TestEmptyStreaker(t *testing.T) {
