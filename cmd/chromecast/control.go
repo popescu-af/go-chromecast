@@ -89,8 +89,6 @@ func remote() error {
 		return fmt.Errorf("could not get a media app: %v", err)
 	}
 
-	go app.UpdateStatus()
-
 	kill := make(chan struct{})
 	ch := make(chan cli.KeyPress, 10)
 
@@ -245,16 +243,17 @@ func getMediaApp(client chromecast.Client, status chromecast.Status) (app *media
 		switch err {
 		case nil:
 			fmt.Println(" OK")
+			go app.UpdateStatus()
 			return app, nil
 		case chromecast.ErrAppNotFound:
 			time.Sleep(time.Second)
 			fmt.Print(".")
 			status, err = command.Launcher{Requester: client}.Status()
 			if err != nil {
-				return app, fmt.Errorf("could not get status: %v", err)
+				return nil, fmt.Errorf("could not get status: %v", err)
 			}
 		default:
-			return app, fmt.Errorf("unexpected failure: %v", err)
+			return nil, fmt.Errorf("unexpected error: %v", err)
 		}
 	}
 }
