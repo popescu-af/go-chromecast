@@ -26,11 +26,6 @@ type Controller interface {
 	Pause() error
 	Seek(t time.Duration) error
 	Stop() error
-
-	// launcher
-	Mute(muted bool) error
-	SetVolume(level float64) error
-	Quit() error
 }
 
 type Progress interface {
@@ -81,7 +76,6 @@ func remote() error {
 		return fmt.Errorf("could not get a client: %v", err)
 	}
 	defer client.Close()
-	launcher := command.Launcher{Requester: client}
 
 	// Get Media app
 	app, err := getMediaApp(client, status)
@@ -98,9 +92,6 @@ func remote() error {
 	lstatus := local.New(status)
 	// lstatus.UpdateMedia(app.LatestStatus()[0])
 
-	forwardFactor := newStreakFactor()
-	backwardFactor := newStreakFactor()
-
 	var wg sync.WaitGroup
 	wg.Add(1)
 
@@ -109,74 +100,21 @@ func remote() error {
 		return atomic.LoadUint32(&sessionFound) == 1
 	}
 
-	var session *media.Session
+	session := new(media.Session)
+	// var session *media.Session
 
 	go func() {
 		defer cancel()
 		defer wg.Done()
 
-		for c := range ch {
-			switch {
-			case c.Type == cli.Escape:
-				if hasSession() {
-					uiprogress.Stop()
-					fmt.Println("bye")
-				}
-				return
-			case c.Type == cli.SpaceBar && hasSession():
-				if lstatus.TogglePlay() {
-					session.Play()
-				} else {
-					session.Pause()
-				}
-			case c.Type == cli.LowerCaseLetter:
-				switch c.Key {
-				case 's':
-					if !hasSession() {
-						continue
-					}
-					uiprogress.Stop()
-					fmt.Println("stop")
-					ch, _ := session.Stop()
-					<-ch
-					return
-				case 'q':
-					if hasSession() {
-						uiprogress.Stop()
-					}
-					fmt.Println("quit")
-					launcher.Stop()
-					return
-				case 'm':
-					launcher.Mute(lstatus.ToggleMute())
-				default:
-					logger.Log("msg", "unsupported lowercase", "key", string(c.Key), "type", c.Type)
-				}
-			case c.Type == cli.Arrow:
-				switch c.Key {
-				case cli.Up:
-					launcher.SetVolume(lstatus.IncrVolume(.1))
-				case cli.Down:
-					launcher.SetVolume(lstatus.IncrVolume(-.1))
-				case cli.Left:
-					if !hasSession() {
-						continue
-					}
-					diff := -time.Duration(backwardFactor()) * 5 * time.Second
-					session.Seek(media.Seek(lstatus.SeekBy(diff)))
-				case cli.Right:
-					if !hasSession() {
-						continue
-					}
-					diff := time.Duration(forwardFactor()) * 10 * time.Second
-					session.Seek(media.Seek(lstatus.SeekBy(diff)))
-				default:
-					logger.Log("msg", "unsupported arrow", "key", c.Key, "type", c.Type)
-				}
-			default:
-				logger.Log("msg", "unsupported key", "key", c.Key, "type", c.Type)
-			}
-		}
+		processKeyInputs(
+			ch,
+			hasSession,
+			session,
+			lstatus,
+			logger,
+			command.Launcher{Requester: client}.AmpController(),
+		)
 	}()
 
 	// Get loaded item
@@ -197,10 +135,11 @@ func remote() error {
 	fmt.Println(" OK")
 
 	fmt.Print("Getting a session...")
-	session, err = app.CurrentSession()
+	cs, err := app.CurrentSession()
 	if err != nil {
 		return fmt.Errorf("could not get a session: %v", err)
 	}
+	*session = *cs
 	fmt.Println(" OK")
 
 	fmt.Println("\n Play/Pause: <space>  Seek: ←/→  Volume: ↑/↓/m  Stop: s  Quit: q  Disconnect: <Esc>")
@@ -234,6 +173,75 @@ func remote() error {
 	wg.Wait()
 
 	return nil
+}
+
+func processKeyInputs(ch chan cli.KeyPress, hasSession func() bool, session *media.Session, lstatus *local.Status, logger chromecast.Logger, amp chromecast.AmpController) {
+
+	forwardFactor := newStreakFactor()
+	backwardFactor := newStreakFactor()
+
+	for c := range ch {
+		switch {
+		case c.Type == cli.Escape:
+			if hasSession() {
+				uiprogress.Stop()
+				fmt.Println("bye")
+			}
+			return
+		case c.Type == cli.SpaceBar && hasSession():
+			if lstatus.TogglePlay() {
+				session.Play()
+			} else {
+				session.Pause()
+			}
+		case c.Type == cli.LowerCaseLetter:
+			switch c.Key {
+			case 's':
+				if !hasSession() {
+					continue
+				}
+				uiprogress.Stop()
+				fmt.Println("stop")
+				ch, _ := session.Stop()
+				<-ch
+				return
+			case 'q':
+				if hasSession() {
+					uiprogress.Stop()
+				}
+				fmt.Println("quit")
+				amp.Quit()
+				return
+			case 'm':
+				amp.Mute(lstatus.ToggleMute())
+			default:
+				logger.Log("msg", "unsupported lowercase", "key", string(c.Key), "type", c.Type)
+			}
+		case c.Type == cli.Arrow:
+			switch c.Key {
+			case cli.Up:
+				amp.SetVolume(lstatus.IncrVolume(.1))
+			case cli.Down:
+				amp.SetVolume(lstatus.IncrVolume(-.1))
+			case cli.Left:
+				if !hasSession() {
+					continue
+				}
+				diff := -time.Duration(backwardFactor()) * 5 * time.Second
+				session.Seek(media.Seek(lstatus.SeekBy(diff)))
+			case cli.Right:
+				if !hasSession() {
+					continue
+				}
+				diff := time.Duration(forwardFactor()) * 10 * time.Second
+				session.Seek(media.Seek(lstatus.SeekBy(diff)))
+			default:
+				logger.Log("msg", "unsupported arrow", "key", c.Key, "type", c.Type)
+			}
+		default:
+			logger.Log("msg", "unsupported key", "key", c.Key, "type", c.Type)
+		}
+	}
 }
 
 func getMediaApp(client chromecast.Client, status chromecast.Status) (app *media.App, err error) {

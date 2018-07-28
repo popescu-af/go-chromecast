@@ -31,3 +31,9 @@ type PayloadWithID struct {
 func (p *PayloadWithID) SetRequestID(id uint32) {
 	p.RequestID = &id
 }
+
+type AmpController interface {
+	Mute(muted bool) error
+	SetVolume(level float64) error
+	Quit() error
+}

@@ -90,3 +90,26 @@ func (l Launcher) Mute(muted bool) (st chromecast.Status, err error) {
 	}
 	return l.statusRequest(pay)
 }
+
+// AmpController returns an AmpController
+func (l Launcher) AmpController() chromecast.AmpController {
+	return ampLauncher{l}
+}
+
+type ampLauncher struct {
+	Launcher
+}
+
+func (a ampLauncher) Mute(muted bool) error {
+	_, err := a.Launcher.Mute(muted)
+	return err
+}
+func (a ampLauncher) SetVolume(level float64) error {
+	_, err := a.Launcher.SetVolume(level)
+	return err
+}
+
+func (a ampLauncher) Quit() error {
+	_, err := a.Launcher.Stop()
+	return err
+}
