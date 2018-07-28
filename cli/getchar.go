@@ -34,55 +34,16 @@ func readStdin(out chan<- []byte, done <-chan struct{}) func() {
 
 func ReadStdinKeys(out chan<- KeyPress, done <-chan struct{}) func() {
 	buf := make(chan []byte, 5)
-	go func() {
-		defer close(out)
-		for {
-			b, ok := <-buf
-			if !ok {
-				return
-			}
-			if len(b) == 1 {
-				by := b[0]
-				switch {
-				case 'a' <= by && by <= 'z':
-					out <- KeyPress{
-						Type: LowerCaseLetter,
-						Key:  by,
-					}
-				case 'A' <= by && by <= 'Z':
-					out <- KeyPress{
-						Type: UpperCaseLetter,
-						Key:  by,
-					}
-				case by == ' ':
-					out <- KeyPress{
-						Type: SpaceBar,
-						Key:  by,
-					}
-				case by == 27:
-					// escape
-					out <- KeyPress{
-						Type: Escape,
-						Key:  by,
-					}
-				default:
-					out <- KeyPress{
-						Type: Unsupported,
-						Key:  by,
-					}
-				}
-				continue
-			}
+	go forwardKeyPress(buf, out)
+	return readStdin(buf, done)
+}
 
-			// multiple bytes
-			if len(b) == 3 && b[0] == 27 && b[1] == 91 {
-				// arrow
-				out <- KeyPress{
-					Type: Arrow,
-					Key:  b[2],
-				}
-				continue
-			}
+func forwardKeyPress(in <-chan []byte, out chan<- KeyPress) {
+	for b := range in {
+		kp := bytesToKeyPress(b)
+		if kp.Type != Unsupported {
+			out <- kp
+		} else {
 			for _, by := range b {
 				out <- KeyPress{
 					Type: Unsupported,
@@ -90,9 +51,50 @@ func ReadStdinKeys(out chan<- KeyPress, done <-chan struct{}) func() {
 				}
 			}
 		}
+	}
+	close(out)
+}
 
-	}()
-	return readStdin(buf, done)
+func bytesToKeyPress(b []byte) KeyPress {
+	// 1 byte
+	if len(b) == 1 {
+		by := b[0]
+		switch {
+		case 'a' <= by && by <= 'z':
+			return KeyPress{
+				Type: LowerCaseLetter,
+				Key:  by,
+			}
+		case 'A' <= by && by <= 'Z':
+			return KeyPress{
+				Type: UpperCaseLetter,
+				Key:  by,
+			}
+		case by == ' ':
+			return KeyPress{
+				Type: SpaceBar,
+				Key:  by,
+			}
+		case by == 27:
+			// escape
+			return KeyPress{
+				Type: Escape,
+				Key:  by,
+			}
+		}
+	}
+
+	// 3 bytes
+	if len(b) == 3 && b[0] == 27 && b[1] == 91 {
+		// arrow (see const Up Left...)
+		return KeyPress{
+			Type: Arrow,
+			Key:  b[2],
+		}
+	}
+	return KeyPress{
+		Type: Unsupported,
+	}
 }
 
 type KeyPress struct {

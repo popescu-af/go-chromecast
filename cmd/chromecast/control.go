@@ -84,9 +84,6 @@ func remote() error {
 	}
 
 	kill := make(chan struct{})
-	ch := make(chan cli.KeyPress, 10)
-
-	defer cli.ReadStdinKeys(ch, kill)()
 	defer close(kill)
 
 	lstatus := local.New(status)
@@ -104,6 +101,9 @@ func remote() error {
 	// var session *media.Session
 
 	go func() {
+		ch := make(chan cli.KeyPress, 10)
+		defer cli.ReadStdinKeys(ch, kill)()
+
 		defer cancel()
 		defer wg.Done()
 
