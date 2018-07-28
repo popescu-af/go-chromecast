@@ -83,9 +83,6 @@ func remote() error {
 		return fmt.Errorf("could not get a media app: %v", err)
 	}
 
-	kill := make(chan struct{})
-	defer close(kill)
-
 	lstatus := local.New(status)
 	// lstatus.UpdateMedia(app.LatestStatus()[0])
 
@@ -102,7 +99,7 @@ func remote() error {
 
 	go func() {
 		ch := make(chan cli.KeyPress, 10)
-		defer cli.ReadStdinKeys(ch, kill)()
+		go cli.ReadStdinKeyPresses(clientCtx, ch)
 
 		defer cancel()
 		defer wg.Done()
