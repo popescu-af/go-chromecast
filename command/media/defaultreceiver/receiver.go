@@ -43,7 +43,7 @@ func ExtractType(rawurl string) (string, error) {
 	}
 	t := contentTypeFromExtension(path.Ext(u.Path))
 	if t == "" {
-		return "", fmt.Errorf("could not find suitable content-type for '%s'", path.Ext(u.Path))
+		return "", fmt.Errorf("could not find suitable content-type for '%s' (use the 'ext=.mpd' to force it)", path.Ext(u.Path))
 	}
 	return contentTypeFromExtension(path.Ext(u.Path)), nil
 }
