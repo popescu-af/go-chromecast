@@ -14,6 +14,9 @@ require (
 	github.com/miekg/dns v1.0.8
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.1
-	golang.org/x/net v0.0.0-20180621144259-afe8f62b1d6b
+	golang.org/x/crypto v0.0.0-20200208060501-ecb85df21340 // indirect
+	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
 	gopkg.in/urfave/cli.v1 v1.20.0
 )
+
+go 1.13
