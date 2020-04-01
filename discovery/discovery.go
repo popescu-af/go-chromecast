@@ -54,7 +54,7 @@ func (s Service) First(ctx context.Context, matchers ...DeviceMatcher) (*chromec
 
 	err := s.Scanner.Scan(ctx, result)
 	if err != nil {
-		return nil, fmt.Errorf("could not initiliaze scanner: %v", err)
+		return nil, fmt.Errorf("could not initiliaze scanner: %w", err)
 	}
 	match := matchAll(matchers...)
 	for {
@@ -75,7 +75,7 @@ func (s Service) Uniq(ctx context.Context, matchers ...DeviceMatcher) (map[strin
 
 	err := s.Scanner.Scan(ctx, scanned)
 	if err != nil {
-		return nil, fmt.Errorf("could not initiliaze scanner: %v", err)
+		return nil, fmt.Errorf("could not initiliaze scanner: %w", err)
 	}
 	match := matchAll(matchers...)
 	found := make(map[string]*chromecast.Device)

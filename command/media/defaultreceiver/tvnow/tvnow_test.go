@@ -40,7 +40,7 @@ func TestAPIParsingGeneration(t *testing.T) {
 			t.Errorf("got '%s', expected '%s'", got, c.expected)
 		}
 		if err != nil {
-			t.Errorf("got unexpected error: %v", err)
+			t.Errorf("got unexpected error: %w", err)
 		}
 	}
 }
@@ -65,7 +65,7 @@ func TestURLParsing(t *testing.T) {
 			t.Errorf("got '%s', expected prefix '%s' for '%s'", got, c.prefix, c.url)
 		}
 		if err != nil {
-			t.Errorf("got unexpected error: %v", err)
+			t.Errorf("got unexpected error: %w", err)
 		}
 	}
 }

@@ -14,7 +14,7 @@ type App struct {
 func LaunchAndConnect(client chromecast.Client, id string, statuses ...chromecast.Status) (*App, error) {
 	st, err := Launcher{Requester: client}.Launch(id, statuses...)
 	if err != nil {
-		return nil, fmt.Errorf("could not launch app: %v", err)
+		return nil, fmt.Errorf("could not launch app: %w", err)
 	}
 	app := st.AppWithID(id)
 	if app == nil {

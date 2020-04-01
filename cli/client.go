@@ -21,7 +21,7 @@ func FirstClientWithStatus(ctx context.Context, logger chromecast.Logger, matche
 	fmt.Print("Searching device... ")
 	chr, err := discovery.Service{Scanner: zeroconf.Scanner{Logger: logger}}.First(ctx, matchers...)
 	if err != nil || chr == nil {
-		return nil, chromecast.Status{}, fmt.Errorf("could not discover a device: %v", err)
+		return nil, chromecast.Status{}, fmt.Errorf("could not discover a device: %w", err)
 	}
 	fmt.Println(chr.Addr() + " OK")
 
@@ -29,7 +29,7 @@ func FirstClientWithStatus(ctx context.Context, logger chromecast.Logger, matche
 	fmt.Print("Connecting client... ")
 	client, err := ConnectedClient(ctx, chr.Addr(), logger)
 	if err != nil {
-		return nil, chromecast.Status{}, fmt.Errorf("could not connect to client: %v", err)
+		return nil, chromecast.Status{}, fmt.Errorf("could not connect to client: %w", err)
 	}
 	fmt.Println(" OK")
 
@@ -39,7 +39,7 @@ func FirstClientWithStatus(ctx context.Context, logger chromecast.Logger, matche
 	fmt.Print("\nGetting receiver status...")
 	status, err := launcher.Status()
 	if err != nil {
-		return nil, chromecast.Status{}, fmt.Errorf("could not get status: %v", err)
+		return nil, chromecast.Status{}, fmt.Errorf("could not get status: %w", err)
 	}
 	fmt.Println(" OK")
 	fmt.Println(status.String())

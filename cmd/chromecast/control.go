@@ -73,14 +73,14 @@ func remote() error {
 
 	client, status, err := GetClientWithStatus(initCtx, logger)
 	if err != nil {
-		return fmt.Errorf("could not get a client: %v", err)
+		return fmt.Errorf("could not get a client: %w", err)
 	}
 	defer client.Close()
 
 	// Get Media app
 	app, err := getMediaApp(client, status)
 	if err != nil {
-		return fmt.Errorf("could not get a media app: %v", err)
+		return fmt.Errorf("could not get a media app: %w", err)
 	}
 
 	lstatus := local.New(status)
@@ -126,7 +126,7 @@ func remote() error {
 		fmt.Print(".")
 		appStatus, err = app.Status()
 		if err != nil {
-			return fmt.Errorf("status could not be fetch: %v", err)
+			return fmt.Errorf("status could not be fetch: %w", err)
 		}
 	}
 	fmt.Println(" OK")
@@ -134,7 +134,7 @@ func remote() error {
 	fmt.Print("Getting a session...")
 	cs, err := app.CurrentSession()
 	if err != nil {
-		return fmt.Errorf("could not get a session: %v", err)
+		return fmt.Errorf("could not get a session: %w", err)
 	}
 	*session = *cs
 	fmt.Println(" OK")
@@ -255,10 +255,10 @@ func getMediaApp(client chromecast.Client, status chromecast.Status) (app *media
 			fmt.Print(".")
 			status, err = command.Launcher{Requester: client}.Status()
 			if err != nil {
-				return nil, fmt.Errorf("could not get status: %v", err)
+				return nil, fmt.Errorf("could not get status: %w", err)
 			}
 		default:
-			return nil, fmt.Errorf("unexpected error: %v", err)
+			return nil, fmt.Errorf("unexpected error: %w", err)
 		}
 	}
 }

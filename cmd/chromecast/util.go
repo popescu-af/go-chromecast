@@ -25,7 +25,7 @@ func GetClientWithStatus(ctx context.Context, logger chromecast.Logger) (chromec
 	fmt.Print("Connecting client...")
 	client, err := ConnectedClient(ctx, chr.Addr(), logger)
 	if err != nil {
-		return nil, chromecast.Status{}, fmt.Errorf("could not connect to client: %v", err)
+		return nil, chromecast.Status{}, fmt.Errorf("could not connect to client: %w", err)
 	}
 	fmt.Println(" OK")
 
@@ -35,7 +35,7 @@ func GetClientWithStatus(ctx context.Context, logger chromecast.Logger) (chromec
 	fmt.Print("Getting receiver status...")
 	status, err := launcher.Status()
 	if err != nil {
-		return nil, chromecast.Status{}, fmt.Errorf("could not get status: %v", err)
+		return nil, chromecast.Status{}, fmt.Errorf("could not get status: %w", err)
 	}
 	fmt.Println(" OK")
 	return client, status, nil

@@ -31,7 +31,7 @@ func TestIframeExtraction(t *testing.T) {
 			t.Errorf("got '%s', expected '%s'", got, c.expected)
 		}
 		if err != nil {
-			t.Errorf("got unexpected error: %v", err)
+			t.Errorf("got unexpected error: %w", err)
 		}
 	}
 }
@@ -55,7 +55,7 @@ func TestMp4Extraction(t *testing.T) {
 			t.Errorf("got '%s', expected '%s'", got, c.expected)
 		}
 		if err != nil {
-			t.Errorf("got unexpected error: %v", err)
+			t.Errorf("got unexpected error: %w", err)
 		}
 	}
 }
@@ -80,7 +80,7 @@ func TestPageRequest(t *testing.T) {
 			t.Errorf("got '%s', expected '%s' for '%s'", got, c.iframe, c.url)
 		}
 		if err != nil {
-			t.Errorf("got unexpected error: %v", err)
+			t.Errorf("got unexpected error: %w", err)
 		}
 	}
 }
@@ -107,7 +107,7 @@ func TestIframeRequest(t *testing.T) {
 			t.Errorf("got '%s', expected '%s' prefix for '%s'", got, c.mp4prefix, c.url)
 		}
 		if err != nil {
-			t.Errorf("got unexpected error: %v", err)
+			t.Errorf("got unexpected error: %w", err)
 		}
 	}
 }

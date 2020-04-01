@@ -20,7 +20,7 @@ var statusCmd = &cobra.Command{
 
 		client, status, err := GetClientWithStatus(ctx, logger)
 		if err != nil {
-			return fmt.Errorf("could not get a client: %v", err)
+			return fmt.Errorf("could not get a client: %w", err)
 		}
 		defer client.Close()
 		fmt.Println("\n", status.String())
@@ -29,7 +29,7 @@ var statusCmd = &cobra.Command{
 		fmt.Print("\nLooking for a media app...")
 		app, err := media.ConnectFromStatus(client, status)
 		if err != nil {
-			return fmt.Errorf("no media app found: %v", err)
+			return fmt.Errorf("no media app found: %w", err)
 		}
 		fmt.Println(" OK")
 
@@ -37,7 +37,7 @@ var statusCmd = &cobra.Command{
 		fmt.Print("Getting media app status...")
 		st, err := app.Status()
 		if err != nil {
-			return fmt.Errorf("could not get media status: %v", err)
+			return fmt.Errorf("could not get media status: %w", err)
 		}
 		fmt.Println(" OK")
 		for _, s := range st {

@@ -37,7 +37,7 @@ func TestFirstDirect(t *testing.T) {
 
 	first, err := service.First(ctx)
 	if err != nil {
-		t.Errorf("unexpected error %v", err)
+		t.Errorf("unexpected error %w", err)
 	}
 	if first == nil {
 		t.Errorf("a client should have been found")
@@ -64,7 +64,7 @@ func TestFirstCancelled(t *testing.T) {
 
 	first, err := service.First(ctx)
 	if err != ctx.Err() {
-		t.Errorf("unexpected error %v", err)
+		t.Errorf("unexpected error %w", err)
 	}
 	if first != nil {
 		t.Errorf("a client should not have been found")
@@ -105,7 +105,7 @@ func TestNamedDirect(t *testing.T) {
 
 	first, err := service.First(ctx, discovery.WithName("casti"))
 	if err != nil {
-		t.Errorf("unexpected error %v", err)
+		t.Errorf("unexpected error %w", err)
 	}
 	if first == nil {
 		t.Fatalf("a client should have been found")
@@ -144,10 +144,10 @@ func TestNamedCancelled(t *testing.T) {
 
 	first, err := service.First(ctx, discovery.WithName("casti"))
 	if err != ctx.Err() {
-		t.Errorf("unexpected error %v", err)
+		t.Errorf("unexpected error %w", err)
 	}
 	if err != ctx.Err() {
-		t.Errorf("unexpected error %v", err)
+		t.Errorf("unexpected error %w", err)
 	}
 	if first != nil {
 		t.Errorf("a client should not have been found")

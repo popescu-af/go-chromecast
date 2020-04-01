@@ -42,7 +42,7 @@ func (df deviceFinderConstraints) GetDevice(ctx context.Context, logger chromeca
 	}
 	chr, err := discovery.Service{Scanner: zeroconf.Scanner{Logger: logger}}.First(ctx, matchers...)
 	if err != nil || chr == nil {
-		return nil, fmt.Errorf("could not find a device: %v", err)
+		return nil, fmt.Errorf("could not find a device: %w", err)
 	}
 	return chr, nil
 }

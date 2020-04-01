@@ -24,7 +24,7 @@ func TestURLParsing(t *testing.T) {
 			t.Errorf("got '%s', expected '%s' for '%s'", got, c.expected, c.url)
 		}
 		if err != nil {
-			t.Errorf("got unexpected error: %v", err)
+			t.Errorf("got unexpected error: %w", err)
 		}
 	}
 }
