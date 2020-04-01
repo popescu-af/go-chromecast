@@ -1,3 +1,4 @@
+// Package zeroconf provides a Scanner backed by the github.com/grandcat/zeroconf package
 package zeroconf
 
 import (
@@ -12,30 +13,31 @@ import (
 	"context"
 )
 
-// Scanner backed by the grandcat/zeroconf package
+// Scanner backed by the github.com/grandcat/zeroconf package
+// Nil values are fine
 type Scanner struct {
 	Logger chromecast.Logger
 	// nil value should be good enough
 	ClientOptions []zeroconf.ClientOption
 }
 
-// Scan repeatedly scans the network  and synchronously sends the chromecast found into the results channel.
+// Scan repeatedly scans the network and sends the chromecast found into the results channel.
 // It finishes when the context is done.
-func (s Scanner) Scan(ctx context.Context, results chan<- *chromecast.Device) (func() error, error) {
+func (s Scanner) Scan(ctx context.Context, results chan<- *chromecast.Device) error {
 	// generate entries
 	// Discover all services on the network (e.g. _workstation._tcp)
 	resolver, err := zeroconf.NewResolver(s.ClientOptions...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize resolver: %v", err)
+		return fmt.Errorf("failed to initialize resolver: %w", err)
 	}
 
 	entries := make(chan *zeroconf.ServiceEntry, 5)
 	err = resolver.Browse(ctx, "_googlecast._tcp", "local", entries)
 	if err != nil {
-		return nil, fmt.Errorf("fail to browse services: %v", err)
+		return fmt.Errorf("fail to browse services: %w", err)
 	}
 
-	return func() error {
+	go func() {
 		defer close(results)
 		// decode entries
 		for e := range entries {
@@ -48,11 +50,11 @@ func (s Scanner) Scan(ctx context.Context, results chan<- *chromecast.Device) (f
 			case results <- c:
 				continue
 			case <-ctx.Done():
-				return ctx.Err()
+				return
 			}
 		}
-		return ctx.Err()
-	}, nil
+	}()
+	return nil
 }
 
 // decode turns an zeroconf.ServiceEntry into a chromecast.Device

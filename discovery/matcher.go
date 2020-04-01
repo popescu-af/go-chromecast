@@ -12,10 +12,17 @@ func WithName(name string) DeviceMatcher {
 	}
 }
 
-// WithID matches a device by its name
+// WithID matches a device by its id
 func WithID(id string) DeviceMatcher {
 	return func(device *chromecast.Device) bool {
 		return device != nil && device.ID() == id
+	}
+}
+
+// WithType matches a device by its type
+func WithType(t string) DeviceMatcher {
+	return func(device *chromecast.Device) bool {
+		return device != nil && device.Type() == t
 	}
 }
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	chromecast "github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/discovery"
 	"github.com/oliverpool/go-chromecast/discovery/zeroconf"
 	"github.com/spf13/cobra"
 )
@@ -21,17 +20,19 @@ var listCmd = &cobra.Command{
 		defer cancel()
 
 		scanner := zeroconf.Scanner{Logger: logger}
-		allDevices := make(chan *chromecast.Device, 5)
-		uniqDevices := make(chan *chromecast.Device, 5)
+		devices := make(chan *chromecast.Device, 5)
+		seen := make(map[string]bool)
 
-		worker, err := scanner.Scan(ctx, allDevices)
-		if err != nil {
-			return fmt.Errorf("could not initialize scanner: %v", err)
+		if err := scanner.Scan(ctx, devices); err != nil {
+			return fmt.Errorf("could not start scanner: %w", err)
 		}
-		go worker()
-		go discovery.Uniq(allDevices, uniqDevices)
-		for d := range uniqDevices {
-			fmt.Printf("- %s [Addr=%s; uuid=%s; type=%s; status=%s]\n",
+
+		for d := range devices {
+			if seen[d.ID()] {
+				continue
+			}
+			seen[d.ID()] = true
+			fmt.Printf("- %s [addr=%s; uuid=%s; type=%s; status=%s]\n",
 				d.Name(), d.Addr(), d.ID(), d.Type(), d.Status())
 		}
 		return nil

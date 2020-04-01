@@ -1,26 +1,33 @@
 package discovery_test
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 	"time"
 
 	"context"
 
-	"github.com/oliverpool/go-chromecast"
+	chromecast "github.com/oliverpool/go-chromecast"
 	"github.com/oliverpool/go-chromecast/discovery"
-	"github.com/oliverpool/go-chromecast/mock"
 )
 
+type MockedScanner struct {
+	ScanFuncCalled int
+	ScanFunc       func(ctx context.Context, results chan<- *chromecast.Device) error
+}
+
+func (s *MockedScanner) Scan(ctx context.Context, results chan<- *chromecast.Device) error {
+	s.ScanFuncCalled++
+	return s.ScanFunc(ctx, results)
+}
+
 func TestFirstDirect(t *testing.T) {
-	scan := mock.Scanner{
-		ScanFunc: func(ctx context.Context, results chan<- *chromecast.Device) (func() error, error) {
-			return func() error {
+	scan := MockedScanner{
+		ScanFunc: func(ctx context.Context, results chan<- *chromecast.Device) error {
+			go func() {
 				results <- &chromecast.Device{}
 				close(results)
-				return nil
-			}, nil
+			}()
+			return nil
 		},
 	}
 
@@ -41,12 +48,12 @@ func TestFirstDirect(t *testing.T) {
 }
 
 func TestFirstCancelled(t *testing.T) {
-	scan := mock.Scanner{
-		ScanFunc: func(ctx context.Context, results chan<- *chromecast.Device) (func() error, error) {
-			return func() error {
+	scan := MockedScanner{
+		ScanFunc: func(ctx context.Context, results chan<- *chromecast.Device) error {
+			go func() {
 				<-ctx.Done()
-				return nil
-			}, nil
+			}()
+			return nil
 		},
 	}
 
@@ -68,10 +75,10 @@ func TestFirstCancelled(t *testing.T) {
 }
 
 func TestNamedDirect(t *testing.T) {
-	scan := mock.Scanner{}
+	scan := MockedScanner{}
 	done := make(chan struct{})
-	scan.ScanFunc = func(ctx context.Context, results chan<- *chromecast.Device) (func() error, error) {
-		return func() error {
+	scan.ScanFunc = func(ctx context.Context, results chan<- *chromecast.Device) error {
+		go func() {
 			defer close(results)
 			results <- &chromecast.Device{}
 			c := &chromecast.Device{
@@ -87,8 +94,8 @@ func TestNamedDirect(t *testing.T) {
 			case <-ctx.Done():
 			}
 			close(done)
-			return nil
-		}, nil
+		}()
+		return nil
 	}
 
 	service := discovery.Service{Scanner: &scan}
@@ -113,20 +120,21 @@ func TestNamedDirect(t *testing.T) {
 }
 
 func TestNamedCancelled(t *testing.T) {
-	scan := mock.Scanner{}
+	scan := MockedScanner{}
 	done := make(chan struct{})
-	scan.ScanFunc = func(ctx context.Context, results chan<- *chromecast.Device) (func() error, error) {
-		return func() error {
+	scan.ScanFunc = func(ctx context.Context, results chan<- *chromecast.Device) error {
+		go func() {
 			defer close(results)
 			for {
 				select {
 				case results <- &chromecast.Device{}:
 				case <-ctx.Done():
 					close(done)
-					return nil
+					return
 				}
 			}
-		}, nil
+		}()
+		return nil
 	}
 
 	service := discovery.Service{Scanner: &scan}
@@ -148,44 +156,4 @@ func TestNamedCancelled(t *testing.T) {
 		t.Errorf("scanner should have been called at most once, and not %d times", scan.ScanFuncCalled)
 	}
 	<-done
-}
-
-func TestNewDevice(t *testing.T) {
-
-	txt := `id=87cf98a003f1f1dbd2efe6d19055a617|ve=04|md=Chromecast|ic=/setup/icon.png|fn=Chromecast PO|ca=5|st=0|bs=FA8FCA7EE8A9|rs=`
-
-	exp := map[string]string{
-		"id": "87cf98a003f1f1dbd2efe6d19055a617",
-		"ve": "04",
-		"md": "Chromecast",
-		"ic": "/setup/icon.png",
-		"fn": "Chromecast PO",
-		"ca": "5",
-		"st": "0",
-		"bs": "FA8FCA7EE8A9",
-		"rs": "",
-	}
-
-	chr := discovery.NewDevice(nil, 0, strings.Split(txt, "|"))
-
-	res := chr.Properties
-	if !mapEqual(exp, res) {
-		t.Errorf("expected %s; found %s", exp, res)
-	}
-}
-
-func mapEqual(m1, m2 map[string]string) bool {
-	if m1 == nil {
-		return m2 == nil
-	}
-	if len(m1) != len(m2) {
-		return false
-	}
-	for k, v1 := range m1 {
-		if v2, ok := m2[k]; !ok || v1 != v2 {
-			fmt.Println(k, v1, v2, ok)
-			return false
-		}
-	}
-	return true
 }
