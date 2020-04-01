@@ -42,7 +42,16 @@ var controlCmd = &cobra.Command{
 	Short: "Control a chromecast",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return remote()
+		logger, ctx, cancel := flags()
+		defer cancel()
+
+		client, status, err := GetClientWithStatus(ctx, logger)
+		if err != nil {
+			return fmt.Errorf("could not get a client: %w", err)
+		}
+		defer client.Close()
+
+		return remote(ctx, cancel, logger, client, status)
 	},
 }
 
@@ -60,22 +69,21 @@ func newStreakFactor() func() int64 {
 	return s.UpdatedFactor
 }
 
-func remote() error {
+func remote(
+	initCtx context.Context,
+	initCancel context.CancelFunc,
+	logger chromecast.Logger,
+	client chromecast.Client,
+	status chromecast.Status,
+) error {
 	clientCtx := context.Background()
 	clientCtx, clientCancel := context.WithCancel(clientCtx)
 
-	logger, initCtx, initCancel := flags()
 	cancel := func() {
 		clientCancel()
 		initCancel()
 	}
 	defer cancel()
-
-	client, status, err := GetClientWithStatus(initCtx, logger)
-	if err != nil {
-		return fmt.Errorf("could not get a client: %w", err)
-	}
-	defer client.Close()
 
 	// Get Media app
 	app, err := getMediaApp(client, status)

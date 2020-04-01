@@ -31,6 +31,8 @@ var loaders = []namedLoader{
 	{"urlreceiver", urlreceiver.URLLoader},
 }
 
+var controlAfterwards bool
+
 type namedLoader struct {
 	name   string
 	loader media.URLLoader
@@ -51,6 +53,7 @@ func init() {
 		ll = append(ll, l.name)
 	}
 	loadCmd.Flags().StringVarP(&useLoader, "loader", "l", "", "Loader to use (supported loaders: "+strings.Join(ll, ", ")+")")
+	loadCmd.Flags().BoolVarP(&controlAfterwards, "control", "c", false, "Launch control afterwards")
 	rootCmd.AddCommand(loadCmd)
 }
 
@@ -94,6 +97,9 @@ var loadCmd = &cobra.Command{
 			case <-c:
 			case <-time.After(loadRequestTimeout):
 				logger.Log("loader", l.name, "err", "load request didn't return after 10s")
+			}
+			if controlAfterwards {
+				return remote(ctx, cancel, logger, client, status)
 			}
 			return nil
 		}
