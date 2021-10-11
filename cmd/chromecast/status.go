@@ -15,7 +15,7 @@ var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Print the status of the first chromecast found",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger, ctx, cancel := flags()
+		logger, ctx, cancel := flags(cmd)
 		defer cancel()
 
 		client, status, err := GetClientWithStatus(ctx, logger)

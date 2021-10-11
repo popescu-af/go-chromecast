@@ -42,7 +42,7 @@ var controlCmd = &cobra.Command{
 	Short: "Control a chromecast",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger, ctx, cancel := flags()
+		logger, ctx, cancel := flags(cmd)
 		defer cancel()
 
 		client, status, err := GetClientWithStatus(ctx, logger)

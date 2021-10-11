@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -62,54 +63,57 @@ var loadCmd = &cobra.Command{
 	Short: "Load a URL",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		rawurl := args[0]
+		rawurl := strings.TrimSpace(args[0])
 
-		logger, ctx, cancel := flags()
+		logger, ctx, cancel := flags(cmd)
 		defer cancel()
-
-		client, status, err := GetClientWithStatus(ctx, logger)
-		if err != nil {
-			return fmt.Errorf("could not get a client: %w", err)
-		}
-		defer client.Close()
-
-		for _, l := range loaders {
-			var c <-chan []byte
-			var err error
-
-			if useLoader != "" {
-				if l.name != useLoader {
-					continue
-				}
-				c, err = l.load(client, status, rawurl)
-				if err != nil {
-					return err
-				}
-			} else {
-				c, err = l.load(client, status, rawurl)
-				if err != nil {
-					logger.Log("loader", l.name, "state", "loading", "err", err)
-					continue
-				}
-				fmt.Printf("Loading with %s\n", l.name)
-			}
-			select {
-			case <-c:
-			case <-time.After(loadRequestTimeout):
-				logger.Log("loader", l.name, "err", "load request didn't return after 10s")
-			}
-			if controlAfterwards {
-				return remote(ctx, cancel, logger, client, status)
-			}
-			return nil
-		}
-		if useLoader != "" {
-			var ll []string
-			for _, l := range loaders {
-				ll = append(ll, l.name)
-			}
-			return fmt.Errorf("unknown loader '%s' (supported loaders: %s)", useLoader, strings.Join(ll, ", "))
-		}
-		return fmt.Errorf("no supported loader found for %s", rawurl)
+		return loadURL(ctx, cancel, rawurl, useLoader, controlAfterwards, logger)
 	},
+}
+
+func loadURL(ctx context.Context, cancel context.CancelFunc, rawurl, useLoader string, controlAfterwards bool, logger chromecast.Logger) error {
+	client, status, err := GetClientWithStatus(ctx, logger)
+	if err != nil {
+		return fmt.Errorf("could not get a client: %w", err)
+	}
+	defer client.Close()
+
+	for _, l := range loaders {
+		var c <-chan []byte
+		var err error
+
+		if useLoader != "" {
+			if l.name != useLoader {
+				continue
+			}
+			c, err = l.load(client, status, rawurl)
+			if err != nil {
+				return err
+			}
+		} else {
+			c, err = l.load(client, status, rawurl)
+			if err != nil {
+				logger.Log("loader", l.name, "state", "loading", "err", err)
+				continue
+			}
+			fmt.Printf("Loading with %s\n", l.name)
+		}
+		select {
+		case <-c:
+		case <-time.After(loadRequestTimeout):
+			logger.Log("loader", l.name, "err", "load request didn't return after 10s")
+		}
+		if controlAfterwards {
+			return remote(ctx, cancel, logger, client, status)
+		}
+		return nil
+	}
+	if useLoader != "" {
+		var ll []string
+		for _, l := range loaders {
+			ll = append(ll, l.name)
+		}
+		return fmt.Errorf("unknown loader '%s' (supported loaders: %s)", useLoader, strings.Join(ll, ", "))
+	}
+	return fmt.Errorf("no supported loader found for %s", rawurl)
 }
