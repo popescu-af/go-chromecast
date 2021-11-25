@@ -15,7 +15,7 @@ func LaunchAndConnect(client chromecast.Client, statuses ...chromecast.Status) (
 	return media.LaunchAndConnect(client, ID, statuses...)
 }
 
-func URLLoader(rawurl string, tracks []media.Track, options ...media.Option) (func(client chromecast.Client, statuses ...chromecast.Status) (<-chan []byte, error), error) {
+func URLLoader(rawurl string, tracks []media.Track, activeTrackIds []int, textTrackStyle media.TextTrackStyle, options ...media.Option) (func(client chromecast.Client, statuses ...chromecast.Status) (<-chan []byte, error), error) {
 	contentType, err := ExtractType(rawurl)
 	if err != nil {
 		return nil, err
@@ -26,24 +26,12 @@ func URLLoader(rawurl string, tracks []media.Track, options ...media.Option) (fu
 			return nil, err
 		}
 		return app.Load(media.Item{
-			ContentID:   rawurl,
-			ContentType: contentType,
-			StreamType:  "BUFFERED",
-			//// EDIT by me !!!!
-			Tracks: tracks,
-			SubtitleTrackStyle: media.TextTrackStyle{
-				BackgroundColor:   "#00000000",
-				EdgeColor:         "#FFFFFFFF",
-				EdgeType:          "OUTLINE",
-				FontFamily:        "ARIAL",
-				FontGenericFamily: "SANS_SERIF",
-				FontScale:         1,
-				FontStyle:         "NORMAL",
-				ForegroundColor:   "#FF0000FF",
-			},
-
-			////
-		}, options...)
+			ContentID:          rawurl,
+			ContentType:        contentType,
+			StreamType:         "BUFFERED",
+			Tracks:             tracks,
+			SubtitleTrackStyle: textTrackStyle,
+		}, activeTrackIds, options...)
 	}, nil
 }
 

@@ -42,7 +42,6 @@ func ConnectFromStatus(client chromecast.Client, st chromecast.Status) (*App, er
 	}, nil
 }
 
-//// EDIT by me !!!!
 type Track struct {
 	Name        string   `json:"name"`             // Human-readable name
 	TrackID     int      `json:"trackId"`          // Unique ID in the context of the parent MediaInformation object
@@ -66,17 +65,12 @@ type TextTrackStyle struct {
 	ForegroundColor   string  `json:"foregroundColor"`
 }
 
-////
-
 type Item struct {
-	ContentID   string `json:"contentId"`
-	StreamType  string `json:"streamType"`
-	ContentType string `json:"contentType"`
-
-	//// EDIT by me !!!!
+	ContentID          string         `json:"contentId"`
+	StreamType         string         `json:"streamType"`
+	ContentType        string         `json:"contentType"`
 	Tracks             []Track        `json:"tracks"`
 	SubtitleTrackStyle TextTrackStyle `json:"textTrackStyle"`
-	////
 }
 
 type Status struct {
@@ -182,13 +176,13 @@ func CustomData(data interface{}) func(command.Map) {
 	}
 }
 
-func (a *App) Load(item Item, options ...Option) (<-chan []byte, error) {
+func (a *App) Load(item Item, activeTrackIds []int, options ...Option) (<-chan []byte, error) {
 	payload := command.Map{
 		"type":  "LOAD",
 		"media": item,
-		//// EDIT by me !!!!
-		"activeTrackIds": []int{0},
-		////
+	}
+	if len(activeTrackIds) > 0 {
+		payload["activeTrackIds"] = activeTrackIds
 	}
 	for _, opt := range options {
 		opt(payload)
@@ -196,8 +190,8 @@ func (a *App) Load(item Item, options ...Option) (<-chan []byte, error) {
 	return a.Client.Request(a.Envelope, payload)
 }
 
-func (a *App) LoadAndGetSession(item Item, options ...Option) (*Session, error) {
-	response, err := a.Load(item, options...)
+func (a *App) LoadAndGetSession(item Item, activeTrackIds []int, options ...Option) (*Session, error) {
+	response, err := a.Load(item, activeTrackIds, options...)
 	if err != nil {
 		return nil, err
 	}
