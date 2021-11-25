@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/command"
+	"github.com/popescu-af/go-chromecast"
+	"github.com/popescu-af/go-chromecast/command"
 )
 
 // https://developers.google.com/cast/docs/reference/messages
@@ -42,10 +42,41 @@ func ConnectFromStatus(client chromecast.Client, st chromecast.Status) (*App, er
 	}, nil
 }
 
+//// EDIT by me !!!!
+type Track struct {
+	Name        string   `json:"name"`             // Human-readable name
+	TrackID     int      `json:"trackId"`          // Unique ID in the context of the parent MediaInformation object
+	Type        string   `json:"type"`             // e.g. TEXT
+	ContentID   string   `json:"trackContentId"`   // URL
+	ContentType string   `json:"trackContentType"` // e.g. VTT or text/vtt
+	Subtype     string   `json:"subtype"`          // e.g. SUBTITLES
+	Roles       []string `json:"roles"`            // e.g. TEXT: main, alternate, subtitle, supplementary, commentary, dub, description, forced_subtitle
+	Language    string   `json:"language"`         // e.g. en-US
+	IsInband    bool     `json:"isInband"`         // embedded in the media or not
+}
+
+type TextTrackStyle struct {
+	BackgroundColor   string  `json:"backgroundColor"`
+	EdgeColor         string  `json:"edgeColor"`         // RGBA, e.g. ff0000ff for opaque red
+	EdgeType          string  `json:"edgeType"`          // e.g. OUTLINE
+	FontFamily        string  `json:"fontFamily"`        // e.g. ARIAL
+	FontGenericFamily string  `json:"fontGenericFamily"` // e.g. SANS_SERIF
+	FontScale         float64 `json:"fontScale"`         // e.g. 1, 0.5
+	FontStyle         string  `json:"fontStyle"`         // e.g. NORMAL
+	ForegroundColor   string  `json:"foregroundColor"`
+}
+
+////
+
 type Item struct {
 	ContentID   string `json:"contentId"`
 	StreamType  string `json:"streamType"`
 	ContentType string `json:"contentType"`
+
+	//// EDIT by me !!!!
+	Tracks             []Track        `json:"tracks"`
+	SubtitleTrackStyle TextTrackStyle `json:"textTrackStyle"`
+	////
 }
 
 type Status struct {
@@ -151,10 +182,13 @@ func CustomData(data interface{}) func(command.Map) {
 	}
 }
 
-func (a App) Load(item Item, options ...Option) (<-chan []byte, error) {
+func (a *App) Load(item Item, options ...Option) (<-chan []byte, error) {
 	payload := command.Map{
 		"type":  "LOAD",
 		"media": item,
+		//// EDIT by me !!!!
+		"activeTrackIds": []int{0},
+		////
 	}
 	for _, opt := range options {
 		opt(payload)

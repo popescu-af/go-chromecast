@@ -3,7 +3,7 @@ package youtube_test
 import (
 	"testing"
 
-	"github.com/oliverpool/go-chromecast/command/media/youtube"
+	"github.com/popescu-af/go-chromecast/command/media/youtube"
 )
 
 func TestURLParsing(t *testing.T) {

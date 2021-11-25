@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/command"
-	"github.com/oliverpool/go-chromecast/command/media"
+	"github.com/popescu-af/go-chromecast"
+	"github.com/popescu-af/go-chromecast/command"
+	"github.com/popescu-af/go-chromecast/command/media"
 )
 
 // ID from https://github.com/DeMille/url-cast-receiver

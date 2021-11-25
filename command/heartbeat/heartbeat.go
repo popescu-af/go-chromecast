@@ -1,8 +1,8 @@
 package heartbeat
 
 import (
-	"github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/command"
+	"github.com/popescu-af/go-chromecast"
+	"github.com/popescu-af/go-chromecast/command"
 )
 
 func RespondToPing(client chromecast.Client) {

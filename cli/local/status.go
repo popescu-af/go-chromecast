@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	chromecast "github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/command/media"
+	chromecast "github.com/popescu-af/go-chromecast"
+	"github.com/popescu-af/go-chromecast/command/media"
 )
 
 type Status struct {

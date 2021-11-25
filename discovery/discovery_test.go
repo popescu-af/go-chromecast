@@ -6,8 +6,8 @@ import (
 
 	"context"
 
-	chromecast "github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/discovery"
+	chromecast "github.com/popescu-af/go-chromecast"
+	"github.com/popescu-af/go-chromecast/discovery"
 )
 
 type MockedScanner struct {

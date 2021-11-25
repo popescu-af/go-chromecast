@@ -7,14 +7,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/oliverpool/go-chromecast/streak"
+	"github.com/popescu-af/go-chromecast/streak"
 
 	"github.com/gosuri/uiprogress"
-	chromecast "github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/cli"
-	"github.com/oliverpool/go-chromecast/cli/local"
-	"github.com/oliverpool/go-chromecast/command"
-	"github.com/oliverpool/go-chromecast/command/media"
+	chromecast "github.com/popescu-af/go-chromecast"
+	"github.com/popescu-af/go-chromecast/cli"
+	"github.com/popescu-af/go-chromecast/cli/local"
+	"github.com/popescu-af/go-chromecast/command"
+	"github.com/popescu-af/go-chromecast/command/media"
 	"github.com/spf13/cobra"
 )
 

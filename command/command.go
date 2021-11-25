@@ -3,7 +3,7 @@ package command
 import (
 	"encoding/json"
 
-	"github.com/oliverpool/go-chromecast"
+	"github.com/popescu-af/go-chromecast"
 )
 
 type Command struct {

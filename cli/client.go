@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/oliverpool/go-chromecast"
+	"github.com/popescu-af/go-chromecast"
 
-	"github.com/oliverpool/go-chromecast/client"
-	"github.com/oliverpool/go-chromecast/command"
-	"github.com/oliverpool/go-chromecast/command/heartbeat"
-	"github.com/oliverpool/go-chromecast/discovery"
-	"github.com/oliverpool/go-chromecast/discovery/zeroconf"
-	"github.com/oliverpool/go-chromecast/gogoprotobuf"
-	"github.com/oliverpool/go-chromecast/net"
+	"github.com/popescu-af/go-chromecast/client"
+	"github.com/popescu-af/go-chromecast/command"
+	"github.com/popescu-af/go-chromecast/command/heartbeat"
+	"github.com/popescu-af/go-chromecast/discovery"
+	"github.com/popescu-af/go-chromecast/discovery/zeroconf"
+	"github.com/popescu-af/go-chromecast/gogoprotobuf"
+	"github.com/popescu-af/go-chromecast/net"
 )
 
 // FirstClientWithStatus find a device, connects a client and get its status (and is verbose)

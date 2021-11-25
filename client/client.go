@@ -6,7 +6,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/oliverpool/go-chromecast"
+	"github.com/popescu-af/go-chromecast"
 )
 
 func New(serializer chromecast.Serializer, logger chromecast.Logger) *Client {

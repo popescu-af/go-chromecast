@@ -1,8 +1,8 @@
 package zeroconf_test
 
 import (
-	"github.com/oliverpool/go-chromecast/discovery"
-	"github.com/oliverpool/go-chromecast/discovery/zeroconf"
+	"github.com/popescu-af/go-chromecast/discovery"
+	"github.com/popescu-af/go-chromecast/discovery/zeroconf"
 )
 
 // Ensure interface is satisfied

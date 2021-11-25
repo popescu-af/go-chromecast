@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/oliverpool/go-chromecast/streak"
+	"github.com/popescu-af/go-chromecast/streak"
 )
 
 const baseTime = 10 * time.Millisecond

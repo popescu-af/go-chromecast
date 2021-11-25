@@ -1,6 +1,6 @@
 package discovery
 
-import chromecast "github.com/oliverpool/go-chromecast"
+import chromecast "github.com/popescu-af/go-chromecast"
 
 // DeviceMatcher allows to specicy which device should be accepted
 type DeviceMatcher func(*chromecast.Device) bool
