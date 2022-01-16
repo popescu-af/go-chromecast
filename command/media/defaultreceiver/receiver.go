@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"path"
 
-	chromecast "github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/command/media"
+	chromecast "github.com/popescu-af/go-chromecast"
+	"github.com/popescu-af/go-chromecast/command/media"
 )
 
 const ID = "CC1AD845"
@@ -15,7 +15,7 @@ func LaunchAndConnect(client chromecast.Client, statuses ...chromecast.Status) (
 	return media.LaunchAndConnect(client, ID, statuses...)
 }
 
-func URLLoader(rawurl string, options ...media.Option) (func(client chromecast.Client, statuses ...chromecast.Status) (<-chan []byte, error), error) {
+func URLLoader(rawurl string, tracks []media.Track, activeTrackIds []int, textTrackStyle media.TextTrackStyle, options ...media.Option) (func(client chromecast.Client, statuses ...chromecast.Status) (<-chan []byte, error), error) {
 	contentType, err := ExtractType(rawurl)
 	if err != nil {
 		return nil, err
@@ -26,10 +26,12 @@ func URLLoader(rawurl string, options ...media.Option) (func(client chromecast.C
 			return nil, err
 		}
 		return app.Load(media.Item{
-			ContentID:   rawurl,
-			ContentType: contentType,
-			StreamType:  "BUFFERED",
-		}, options...)
+			ContentID:          rawurl,
+			ContentType:        contentType,
+			StreamType:         "BUFFERED",
+			Tracks:             tracks,
+			SubtitleTrackStyle: textTrackStyle,
+		}, activeTrackIds, options...)
 	}, nil
 }
 

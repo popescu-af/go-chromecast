@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/oliverpool/go-chromecast/command/media"
+	"github.com/popescu-af/go-chromecast/command/media"
 	"github.com/spf13/cobra"
 )
 

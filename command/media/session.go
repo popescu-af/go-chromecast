@@ -1,6 +1,6 @@
 package media
 
-import "github.com/oliverpool/go-chromecast/command"
+import "github.com/popescu-af/go-chromecast/command"
 
 type Session struct {
 	*App

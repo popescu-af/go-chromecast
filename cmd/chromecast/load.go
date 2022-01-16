@@ -6,16 +6,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/oliverpool/go-chromecast"
+	"github.com/popescu-af/go-chromecast"
 
-	"github.com/oliverpool/go-chromecast/command/media"
-	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver"
-	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver/tatort"
-	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver/tvnow"
-	defaultvimeo "github.com/oliverpool/go-chromecast/command/media/defaultreceiver/vimeo"
-	"github.com/oliverpool/go-chromecast/command/media/vimeo"
-	"github.com/oliverpool/go-chromecast/command/media/youtube"
-	"github.com/oliverpool/go-chromecast/command/urlreceiver"
+	"github.com/popescu-af/go-chromecast/command/media"
+	"github.com/popescu-af/go-chromecast/command/media/defaultreceiver"
+	"github.com/popescu-af/go-chromecast/command/media/defaultreceiver/tatort"
+	"github.com/popescu-af/go-chromecast/command/media/defaultreceiver/tvnow"
+	defaultvimeo "github.com/popescu-af/go-chromecast/command/media/defaultreceiver/vimeo"
+	"github.com/popescu-af/go-chromecast/command/media/vimeo"
+	"github.com/popescu-af/go-chromecast/command/media/youtube"
+	"github.com/popescu-af/go-chromecast/command/urlreceiver"
 	"github.com/spf13/cobra"
 )
 

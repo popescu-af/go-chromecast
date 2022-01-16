@@ -5,7 +5,7 @@ import (
 
 	kitlog "github.com/go-kit/kit/log"
 
-	"github.com/oliverpool/go-chromecast"
+	"github.com/popescu-af/go-chromecast"
 )
 
 // New creates a new structured logger.

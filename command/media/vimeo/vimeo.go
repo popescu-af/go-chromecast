@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/command/media"
+	"github.com/popescu-af/go-chromecast"
+	"github.com/popescu-af/go-chromecast/command/media"
 )
 
 const ID = "7742C69E"

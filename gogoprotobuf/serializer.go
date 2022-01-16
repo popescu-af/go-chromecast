@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/gogo/protobuf/proto"
-	chromecast "github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/gogoprotobuf/pb"
+	chromecast "github.com/popescu-af/go-chromecast"
+	"github.com/popescu-af/go-chromecast/gogoprotobuf/pb"
 )
 
 type Serializer struct {

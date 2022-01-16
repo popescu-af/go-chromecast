@@ -3,8 +3,8 @@ package discovery_test
 import (
 	"testing"
 
-	chromecast "github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/discovery"
+	chromecast "github.com/popescu-af/go-chromecast"
+	"github.com/popescu-af/go-chromecast/discovery"
 )
 
 func TestUniq(t *testing.T) {

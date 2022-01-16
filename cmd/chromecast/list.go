@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	chromecast "github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/discovery/zeroconf"
+	chromecast "github.com/popescu-af/go-chromecast"
+	"github.com/popescu-af/go-chromecast/discovery/zeroconf"
 	"github.com/spf13/cobra"
 )
 

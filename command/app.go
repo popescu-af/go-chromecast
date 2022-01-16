@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 
-	chromecast "github.com/oliverpool/go-chromecast"
+	chromecast "github.com/popescu-af/go-chromecast"
 )
 
 type App struct {

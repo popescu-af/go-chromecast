@@ -1,6 +1,6 @@
 package discovery
 
-import chromecast "github.com/oliverpool/go-chromecast"
+import chromecast "github.com/popescu-af/go-chromecast"
 
 // Uniq forward all client deduplicated
 func Uniq(in <-chan *chromecast.Device, out chan<- *chromecast.Device) {

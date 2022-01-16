@@ -3,7 +3,7 @@ package vimeo_test
 import (
 	"testing"
 
-	"github.com/oliverpool/go-chromecast/command/media/vimeo"
+	"github.com/popescu-af/go-chromecast/command/media/vimeo"
 )
 
 func TestURLParsing(t *testing.T) {

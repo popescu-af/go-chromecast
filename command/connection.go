@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/oliverpool/go-chromecast"
+	"github.com/popescu-af/go-chromecast"
 )
 
 const DefaultSource = "sender-0"

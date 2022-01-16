@@ -10,9 +10,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/command/media"
-	"github.com/oliverpool/go-chromecast/command/media/defaultreceiver"
+	"github.com/popescu-af/go-chromecast"
+	"github.com/popescu-af/go-chromecast/command/media"
+	"github.com/popescu-af/go-chromecast/command/media/defaultreceiver"
 )
 
 type App struct {

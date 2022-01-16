@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/grandcat/zeroconf"
-	chromecast "github.com/oliverpool/go-chromecast"
-	"github.com/oliverpool/go-chromecast/discovery"
+	chromecast "github.com/popescu-af/go-chromecast"
+	"github.com/popescu-af/go-chromecast/discovery"
 
 	"context"
 )

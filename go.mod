@@ -1,4 +1,4 @@
-module github.com/oliverpool/go-chromecast
+module github.com/popescu-af/go-chromecast
 
 require (
 	github.com/cenkalti/backoff v1.1.0 // indirect

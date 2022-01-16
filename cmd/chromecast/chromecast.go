@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/oliverpool/go-chromecast"
+	"github.com/popescu-af/go-chromecast"
 
-	"github.com/oliverpool/go-chromecast/log"
+	"github.com/popescu-af/go-chromecast/log"
 	"github.com/spf13/cobra"
 )
 

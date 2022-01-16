@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	chromecast "github.com/oliverpool/go-chromecast"
+	chromecast "github.com/popescu-af/go-chromecast"
 )
 
 type Launcher struct {
